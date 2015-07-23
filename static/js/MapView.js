@@ -17,6 +17,7 @@ MapView = (function($, L, Models, Config) {
         minZoom: Config.minZoom,
         defaultZoom: Config.defaultZoom,
         maxZoom: Config.maxZoom,
+        mapCenter: Config.mapCenter,
 
         tileLayerURL: Config.tileLayerURL,
 
@@ -43,7 +44,7 @@ MapView = (function($, L, Models, Config) {
         });
 
         // Leaflet map object
-        this.map = L.map('map', {center: [27, -94],
+        this.map = L.map('map', {center: self.mapCenter,
                                  zoom: self.defaultZoom,
                                  layers: [mapboxTiles]});
 

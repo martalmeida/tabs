@@ -13,6 +13,7 @@ var Config = {
     barbDescriptions: {tail: 0, center: 0.5, head: 1.0},
     arrowHeadSize: 0.15,
     arrowHeadAngle: 60,
+    vectorDensity: 500,
 
     // Contour style
     contourOptions: {
@@ -35,6 +36,7 @@ var Config = {
     minZoom: 7,
     defaultZoom: 7,
     maxZoom: 11,
+    mapCenter: [26.946556420812623, -92.8289794921875],
 
     // Pause between frames (in ms)
     delay: 90,
