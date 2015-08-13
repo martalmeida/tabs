@@ -92,7 +92,8 @@ class THREDDSFrameSource(object):
                   'v': v[self.velocity_idx, self.velocity_idy]}
         return vector
 
-    def salt_frame(self, frame_number, num_levels=10, logspace=True):
+    def salt_frame(self, frame_number, num_levels=10, logspace=True,
+                   cmap='YlGnBu_r'):
         salt = self.nc.variables['salt'][frame_number, 0, :, :]
         salt_range = (salt.max() - salt.min()) * 0.05
 
@@ -108,8 +109,9 @@ class THREDDSFrameSource(object):
                 num_levels)
 
         plt.figure()
+        cmap = plt.cm.get_cmap(cmap)
         contours = plt.contourf(self.salt_lon, self.salt_lat, salt, levels,
-                                extend='both')
+                                cmap=cmap, extend='both')
         geojson = self.contours_to_geoJSON(contours)
         plt.close()
 
