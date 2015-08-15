@@ -93,7 +93,7 @@ class THREDDSFrameSource(object):
         return vector
 
     def salt_frame(self, frame_number, num_levels=10, logspace=True,
-                   cmap='YlGnBu_r'):
+                   cmap=None):
         salt = self.nc.variables['salt'][frame_number, 0, :, :]
         salt_range = (salt.max() - salt.min()) * 0.05
 
@@ -109,7 +109,11 @@ class THREDDSFrameSource(object):
                 num_levels)
 
         plt.figure()
-        cmap = plt.cm.get_cmap(cmap)
+        if cmap is None:
+            from cmocean.cm import salinity
+            cmap = salinity
+        else:
+            cmap = plt.cm.get_cmap(cmap)
         contours = plt.contourf(self.salt_lon, self.salt_lat, salt, levels,
                                 cmap=cmap, extend='both')
         geojson = self.contours_to_geoJSON(contours)
