@@ -130,9 +130,9 @@ MapView = (function($, L, Models, Config) {
     MapView.prototype.showTimeStep = function showTimeStep(i, callback) {
         this.currentFrame = i;
         this.sliderControl.value(i);
-	L.Util.requestAnimFrame(function do_redraw() {
+        L.Util.requestAnimFrame(function do_redraw() {
             this.redraw(callback);
-	}, this, true);
+        }, this, true);
     };
 
 
