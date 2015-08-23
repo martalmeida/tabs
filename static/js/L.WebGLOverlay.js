@@ -128,10 +128,9 @@ L.WebGLOverlay = L.Class.extend({
   },
 
   setLines: function(lines) {
-    console.log('setlines');
     // Two points per line
-    this._numPoints = lines.length * 2;
-    if (!this.initialized) {
+      this._numPoints = lines.length * 2;
+    if (!this.initialized || this._numPoints * 2 > this.vertArray.length) {
       // Two floats per point
       this.initializeBuffers(this._numPoints * 2);
     }

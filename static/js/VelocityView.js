@@ -2,14 +2,8 @@ var VelocityView = (function($, L, Models, Config) {
 
     var defaults = {
 
-        // layer containing currently displayed vector polylines
-        vectorGroup: L.layerGroup([]),
-
         // The number of vectors to display
-        displayPoints: 0,
-
-        // Collection of all vector polylines
-        allVectors: [],
+        numVectorsToDisplay: 0,
 
         // The locations of the data points
         points: [],
@@ -57,11 +51,12 @@ var VelocityView = (function($, L, Models, Config) {
 
         self.mapView = mapView;
 
-        self.mapView.map.on('dragend', function() {self.redraw();});
-
         if (self.mapView.visibleLayers.velocity) {
             this.glOverlay.addTo(self.mapView.map);
         }
+
+        self.mapView.map.on('dragend', function() { self.redraw(); });
+        self.mapView.map.on('zoomend', function() { self.updateNumVectorsToDisplay(); });
 
         mapView.layerSelectControl.addToggledOverlay(
             'velocity', self.glOverlay, 'Velocity');
@@ -75,6 +70,7 @@ var VelocityView = (function($, L, Models, Config) {
         // Build the set of vectors to display
         self.vfs.withVelocityGridLocations({}, function(points) {
             self.points = points;
+            self.updateNumVectorsToDisplay();
 
             var options = {frame: mapView.currentFrame,
                            points: points,
@@ -101,13 +97,15 @@ var VelocityView = (function($, L, Models, Config) {
                        points: self.points,
                        mapScale: self.mapView.mapScale()};
         self.vfs.withVelocityFrame(options, function(data) {
-            self.glOverlay.setLines(data.vectors);
+            // Three lines per arrow
+            var lines = data.vectors.slice(0, self.numVectorsToDisplay * 3);
+            self.glOverlay.setLines(lines);
             callback && callback(data);
         });
     };
 
 
-    VelocityView.prototype.updateDisplayPoints = function updateDisplayPts() {
+    VelocityView.prototype.updateNumVectorsToDisplay = function() {
         var self = this;
         var density = self.vectorDensity;
         var nPoints = self.points.length;
@@ -115,8 +113,9 @@ var VelocityView = (function($, L, Models, Config) {
         var minZoom = self.mapView.minZoom;
         var scale = Math.pow(4, zoom - minZoom);
         var n = Math.min(Math.ceil(density * scale), nPoints);
-        // console.log('show', n, 'at zoom level', zoom);
-        self.displayPoints = n;
+        console.log('show', n, 'at zoom level', zoom);
+        self.numVectorsToDisplay = n;
+        self.redraw();
     };
 
 
