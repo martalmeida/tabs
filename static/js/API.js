@@ -45,7 +45,7 @@ API = (function(Config, $) {
             options.frame = 0;
         }
         url = Config.velocityFrameURL;
-        return url + options.frame;
+        return url + 'step' + options.frame + '.json';
     }
 
     function urlForSaltFrame(options) {
