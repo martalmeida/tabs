@@ -54,6 +54,7 @@ L.CanvasOverlay = L.Class.extend({
 
         map._panes.overlayPane.appendChild(this._canvas);
 
+        map.on('drag', this._reset, this);
         map.on('moveend', this._reset, this);
         map.on('resize',  this._resize, this);
 
@@ -67,6 +68,7 @@ L.CanvasOverlay = L.Class.extend({
     onRemove: function (map) {
         map.getPanes().overlayPane.removeChild(this._canvas);
 
+        map.off('drag', this._reset, this);
         map.off('moveend', this._reset, this);
         map.off('resize', this._resize, this);
 
