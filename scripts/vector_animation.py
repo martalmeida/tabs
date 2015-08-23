@@ -4,21 +4,22 @@ import matplotlib
 matplotlib.use('Agg')
 
 import os
-import simplejson
+import json
 
 import numpy as np
+np.random.seed(0xDEADBEEF)
+
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 import netCDF4 as netCDF
 
-import octant
-import octant.roms
+from octant_lite import rot2d, shrink
 
 # length of animation (number of frames)
 NFRAMES = 90
 
 # set output precision for JSON data
-simplejson.encoder.FLOAT_REPR = lambda o: format(o, '.4f')
+json.encoder.FLOAT_REPR = lambda o: format(o, '.4f')
 
 
 class mch_animation(object):
@@ -103,7 +104,7 @@ class mch_animation(object):
             xv, yv = self.basemap(lon, lat)
             self.xv, self.yv = xv, yv
             maskv = self.ncg.variables['mask_psi'][:]
-            self.anglev = octant.tools.shrink(self.ncg.variables['angle'][:], xv.shape)
+            self.anglev = shrink(self.ncg.variables['angle'][:], xv.shape)
             idx, idy = np.where(maskv == 1.0)
             idv = np.arange(len(idx))
             np.random.shuffle(idv)
@@ -119,8 +120,8 @@ class mch_animation(object):
  
         u = self.nc.variables['u'][self.n, -1, :, :]
         v = self.nc.variables['v'][self.n, -1, :, :]
-        u, v = octant.tools.shrink(u, v)
-        u, v = octant.tools.rot2d(u, v, self.anglev)
+        u, v = shrink(u, v)
+        u, v = rot2d(u, v, self.anglev)
 
         self.q = self.ax.quiver(self.xv[self.idx, self.idy],
         self.yv[self.idx, self.idy],
@@ -153,7 +154,7 @@ def write_vector(vector, outfile):
         os.mkdir(out_dir)
     filename = os.path.join(out_dir, outfile)
     with open(filename, 'w') as f:
-        simplejson.dump(vector, f)
+        json.dump(vector, f)
 
 
 if __name__ == '__main__':
