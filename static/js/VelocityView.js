@@ -43,7 +43,11 @@ var VelocityView = (function($, L, Models, Config) {
         this.vfs = Models.velocityFrameSource({
             barbLocation: this.barbLocation,
             arrowHeadSize: this.arrowHeadSize,
-            arrowHeadAngle: this.arrowHeadAngle});
+            arrowHeadAngle: this.arrowHeadAngle
+        });
+
+        this.glOverlay = new L.WebGLOverlay();
+
 
     };
 
@@ -53,19 +57,20 @@ var VelocityView = (function($, L, Models, Config) {
 
         self.mapView = mapView;
 
-        self.mapView.map.on('dragend', function() {self.redraw()});
-
-        mapView.layerSelectControl.addToggledOverlay(
-            'velocity', self.vectorGroup, 'Velocity');
+        self.mapView.map.on('dragend', function() {self.redraw();});
 
         if (self.mapView.visibleLayers.velocity) {
-            self.vectorGroup.addTo(mapView.map);
+            this.glOverlay.addTo(self.mapView.map);
         }
 
-        var style = {
-            color: self.color,
-            weight: self.weight
-        };
+        mapView.layerSelectControl.addToggledOverlay(
+            'velocity', self.glOverlay, 'Velocity');
+
+        // Currently ignored. Need to sort out the GLSL for this.
+        // var style = {
+            // color: self.color,
+            // weight: self.weight
+        // };
 
         // Build the set of vectors to display
         self.vfs.withVelocityGridLocations({}, function(points) {
@@ -74,13 +79,6 @@ var VelocityView = (function($, L, Models, Config) {
             var options = {frame: mapView.currentFrame,
                            points: points,
                            mapScale: mapView.mapScale()};
-            self.vfs.withVelocityFrame(options, function(data) {
-                var vectors = data.vectors;
-                for (var i = 0; i < vectors.length; i++) {
-                    var line = L.polyline(vectors[i], style);
-                    self.allVectors.push(line);
-                }
-            });
 
             // Put the initial velocity vectors on the map
             self.redraw();
@@ -103,12 +101,7 @@ var VelocityView = (function($, L, Models, Config) {
                        points: self.points,
                        mapScale: self.mapView.mapScale()};
         self.vfs.withVelocityFrame(options, function(data) {
-            var old = self.displayPoints;
-            self.updateDisplayPoints();
-            var latLngBounds = self.mapView.map.getBounds();
-            selectVectors(latLngBounds, self.displayPoints, old,
-                          self.allVectors, self.vectorGroup);
-            drawVectors(latLngBounds, data, self.vectorGroup);
+            self.glOverlay.setLines(data.vectors);
             callback && callback(data);
         });
     };
@@ -132,34 +125,5 @@ var VelocityView = (function($, L, Models, Config) {
             return new VelocityView(config);
         }
     };
-
-
-    // Private Functions
-
-    function selectVectors(
-            latLngBounds, displayPoints, oldDisplayPoints,
-            allVectors, vectorGroup) {
-        if (displayPoints > oldDisplayPoints) {
-            // console.log(oldDisplayPoints + ' -> ' + displayPoints);
-            allVectors.slice(oldDisplayPoints, displayPoints)
-                .forEach(vectorGroup.addLayer.bind(vectorGroup));
-        } else if (displayPoints < oldDisplayPoints) {
-            // console.log(oldDisplayPoints + ' -> ' + displayPoints);
-            allVectors.slice(displayPoints, oldDisplayPoints)
-                .forEach(vectorGroup.removeLayer.bind(vectorGroup));
-        }
-    }
-
-
-    function drawVectors(latLngBounds, velocityFrames, vectorGroup) {
-        var latLngs = velocityFrames.vectors;
-        var i = 0;
-        vectorGroup.eachLayer(function _redraw(layer) {
-            var idx = i++;
-            if (latLngBounds.intersects(layer.getBounds())) {
-                layer.setLatLngs(latLngs[idx]);
-            }
-        });
-    }
 
 }(jQuery, L, Models, Config));
