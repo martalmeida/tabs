@@ -29,18 +29,20 @@ var VelocityView = (function($, L, Models, Config) {
 
     var VelocityView = function VelocityView(config) {
 
-        $.extend(this, defaults, config);
+        var self = this;
+
+        $.extend(self, defaults, config);
 
         // Convert to radians
-        this.arrowHeadAngle *= Math.PI / 180;
+        self.arrowHeadAngle *= Math.PI / 180;
 
-        this.vfs = Models.velocityFrameSource({
-            barbLocation: this.barbLocation,
-            arrowHeadSize: this.arrowHeadSize,
-            arrowHeadAngle: this.arrowHeadAngle
+        self.vfs = Models.velocityFrameSource({
+            barbLocation: self.barbLocation,
+            arrowHeadSize: self.arrowHeadSize,
+            arrowHeadAngle: self.arrowHeadAngle
         });
 
-        this.glOverlay = new L.WebGLOverlay();
+        self.glOverlay = new L.WebGLOverlay();
 
 
     };
@@ -52,7 +54,7 @@ var VelocityView = (function($, L, Models, Config) {
         self.mapView = mapView;
 
         if (self.mapView.visibleLayers.velocity) {
-            this.glOverlay.addTo(self.mapView.map);
+            self.glOverlay.addTo(self.mapView.map);
         }
 
         self.mapView.map.on('dragend', function() { self.redraw(); });
@@ -90,7 +92,7 @@ var VelocityView = (function($, L, Models, Config) {
 
         // If we haven't been added to a map we don't bother redrawing
         if (!self.mapView || !self.points.length) {
-            return this;
+            return self;
         }
 
         var options = {frame: self.mapView.currentFrame,

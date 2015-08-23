@@ -55,7 +55,6 @@ MapView = (function($, L, Models, Config) {
             }
         });
 
-
         // Add map components
         this.tabsControl = new TABSControl.tabsControl({
             nFrames: self.nFrames,
