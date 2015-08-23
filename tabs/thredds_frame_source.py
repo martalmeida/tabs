@@ -185,7 +185,7 @@ def main(NFRAMES=90, output_dir=None):
         output_dir = os.path.join(os.path.dirname(__file__),
                                   '../static/data/json')
     filename = partial(os.path.join, output_dir)
-    frame_source = THREDDSFrameSource(DEFAULT_DATA_URI, decimate_factor=60)
+    frame_source = THREDDSFrameSource(DEFAULT_DATA_URI, decimate_factor=10)
     write_vector(frame_source.velocity_grid, filename('grd_locations.json'))
 
     for tidx in range(NFRAMES):
