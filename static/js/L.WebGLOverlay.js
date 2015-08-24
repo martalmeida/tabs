@@ -74,7 +74,7 @@ L.WebGLOverlay = L.Class.extend({
     // FIXME: unintialize gl or someting?
   },
 
-  LatLongToPixelXY: function(latitude, longitude) {
+  latLongToPixelXY: function(latitude, longitude) {
     // We're using this rather than any of the built-in leaflet functions
     // because we're converting lat long to a global pixel value that has
     // nothing to do with actual map location, and then building a
@@ -143,10 +143,10 @@ L.WebGLOverlay = L.Class.extend({
     // one line is [[x1, y1], [x2, y2]]
     var idx = 0;
     for (var i = 0; i < lines.length; i++) {
-      var pixel = this.LatLongToPixelXY(lines[i][0][0], lines[i][0][1]);
+      var pixel = this.latLongToPixelXY(lines[i][0][0], lines[i][0][1]);
       this.vertArray[idx++] = pixel.x;
       this.vertArray[idx++] = pixel.y;
-      pixel = this.LatLongToPixelXY(lines[i][1][0], lines[i][1][1]);
+      pixel = this.latLongToPixelXY(lines[i][1][0], lines[i][1][1]);
       this.vertArray[idx++] = pixel.x;
       this.vertArray[idx++] = pixel.y;
     }
@@ -169,7 +169,7 @@ L.WebGLOverlay = L.Class.extend({
 
     var bounds = this._map.getBounds();
     var topLeft = new L.LatLng(bounds.getNorth(), bounds.getWest());
-    var offset = this.LatLongToPixelXY(topLeft.lat, topLeft.lng);
+    var offset = this.latLongToPixelXY(topLeft.lat, topLeft.lng);
 
     // -- Scale to current zoom
     var scale = Math.pow(2, this._map.getZoom());
