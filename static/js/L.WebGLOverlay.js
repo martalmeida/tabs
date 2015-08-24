@@ -75,6 +75,12 @@ L.WebGLOverlay = L.Class.extend({
   },
 
   LatLongToPixelXY: function(latitude, longitude) {
+    // We're using this rather than any of the built-in leaflet functions
+    // because we're converting lat long to a global pixel value that has
+    // nothing to do with actual map location, and then building a
+    // transformation matrix to do the appropriate shifting around on the GPU.
+    // TODO: could use some more investigation about efficiency here (is it
+    // really worth it?)
     var pi_180 = Math.PI / 180.0;
     var pi_4 = Math.PI * 4;
     var sinLatitude = Math.sin(latitude * pi_180);
