@@ -2,7 +2,7 @@ import json
 from threading import Timer, RLock
 
 import numpy as np
-from flask import Flask, redirect, request, url_for
+from flask import Flask, make_response, redirect, request, url_for
 
 from tabs import thredds_frame_source
 
@@ -162,9 +162,15 @@ def static_grid():
 @app.route('/data/thredds/velocity/step/<int:time_step>')
 def thredds_velocity_frame(time_step):
     """ Return the velocity frame corresponding to `time_step`. """
-    vs = tc.fs.velocity_frame(time_step)
-    vs = jsonify_dict_of_array(vs)
-    return json.dumps(vs)
+    try:
+        vs = tc.fs.velocity_frame(time_step)
+        vs = jsonify_dict_of_array(vs)
+        return json.dumps(vs)
+    except Exception as e:
+        msg = 'No velocity available for time step {0:d}.'.format(time_step)
+        app.logger.error(msg)
+        app.logger.debug(str(e))
+        return make_response(msg, 404)
 
 
 @app.route('/data/prefetched/velocity/step/<int:time_step>')
