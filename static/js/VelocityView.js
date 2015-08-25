@@ -42,7 +42,7 @@ var VelocityView = (function($, L, Models, Config) {
             arrowHeadAngle: self.arrowHeadAngle
         });
 
-        self.glOverlay = new L.WebGLOverlay();
+        self.glOverlay = new L.WebGLVectorLayer();
 
 
     };
