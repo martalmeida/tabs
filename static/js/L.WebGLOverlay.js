@@ -1,3 +1,7 @@
+
+// Based on CartoDB's canvas overlay
+// https://github.com/CartoDB/Leaflet.CanvasLayer
+
 if(typeof(L) !== 'undefined') {
 
 L.WebGLVectorLayer = L.Class.extend({
