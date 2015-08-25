@@ -30,11 +30,9 @@ Models.velocityFrameSource = (function($, Trig, Config) {
 
             var barb = make_barb(startpoint, endpoint, this.barbPosition,
                                  this.arrowHeadSize, this.arrowHeadAngle);
-            // Ideally we'd push the arrow and barb separately, but we really
-            // need to draw the arrow in one stroke for performance reasons
-            var arrow = [barb[0], barb[1], barb[2], barb[1],
-                         endpoint, startpoint];
-            vectors.push(arrow);
+            vectors.push([barb[0], barb[1]],
+                         [barb[2], barb[1]],
+                         [endpoint, startpoint]);
         }
         date = velocityVectors.date;
         return {date: date, vectors: vectors};

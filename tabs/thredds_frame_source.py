@@ -172,7 +172,7 @@ def write_vector(vector, outfile):
         if isinstance(vector[k], np.ndarray):
             vector[k] = vector[k].round(4).tolist()
     with open(outfile, 'w') as f:
-        json.dump(vector, f, separators=(',', ': '), indent=4)
+        json.dump(vector, f)
         f.write('\n')
 
     print(" ... wrote {}".format(outfile))
@@ -183,9 +183,9 @@ def main(NFRAMES=90, output_dir=None):
     np.random.seed(0xDEADBEEF)
     if output_dir is None:
         output_dir = os.path.join(os.path.dirname(__file__),
-                                  'static/data/json')
+                                  '../static/data/json')
     filename = partial(os.path.join, output_dir)
-    frame_source = THREDDSFrameSource(DEFAULT_DATA_URI, decimate_factor=60)
+    frame_source = THREDDSFrameSource(DEFAULT_DATA_URI, decimate_factor=10)
     write_vector(frame_source.velocity_grid, filename('grd_locations.json'))
 
     for tidx in range(NFRAMES):
