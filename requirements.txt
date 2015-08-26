@@ -1,0 +1,6 @@
+basemap==1.0.7
+flask==0.10.1
+matplotlib==1.4.3
+netCDF4==1.1.7.1
+numpy==1.9.2
+Shapely==1.5.1
