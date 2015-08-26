@@ -6,7 +6,7 @@ except ImportError:
     from distut2ils.core import setup
 
 setup(name='tabs',
-      version='1.0',
+      version='1.0dev',
       description='TABS vector server',
       packages=['tabs'],
       package_dir={'tabs': 'tabs'},
