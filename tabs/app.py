@@ -186,9 +186,16 @@ def static_velocity_frame(time_step):
 def thredds_salt_frame(time_step):
     num_levels = request.args.get('numSaltLevels', 10)
     logspace = 'logspace' in request.args
-    salt = tc.fs.salt_frame(
-        time_step, num_levels=num_levels, logspace=logspace)
-    return json.dumps(salt)
+    try:
+        salt = tc.fs.salt_frame(
+            time_step, num_levels=num_levels, logspace=logspace)
+        return json.dumps(salt)
+    except Exception as e:
+        msg = 'No salt data available for time step {0:d}.'.format(time_step)
+        app.logger.error(msg)
+        app.logger.debug(str(e))
+        return make_response(msg, 404)
+
 
 if __name__ == '__main__':
     import argparse
