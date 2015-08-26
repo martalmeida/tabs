@@ -110,8 +110,11 @@ class THREDDSFrameSource(object):
 
         plt.figure()
         if cmap is None:
-            from cmocean.cm import salinity
-            cmap = salinity
+            try:
+                from cmocean.cm import salinity
+                cmap = salinity
+            except ImportError:
+                cmap = 'YlGnBu'
         else:
             cmap = plt.cm.get_cmap(cmap)
         contours = plt.contourf(self.salt_lon, self.salt_lat, salt, levels,
