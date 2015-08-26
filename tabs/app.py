@@ -204,7 +204,7 @@ if __name__ == '__main__':
                         default='127.0.0.1', const='0.0.0.0',
                         help="Listen on all interfaces")
     parser.add_argument('-d', '--decimate', type=int, action='store',
-                        default=60, help="Decimation factor")
+                        default=10, help="Decimation factor")
     parser.add_argument('-D', '--debug', action='store_true',
                         help="Debug mode")
 

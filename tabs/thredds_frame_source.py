@@ -23,7 +23,7 @@ DEFAULT_DATA_URI = TABS_DATA_URI
 
 class THREDDSFrameSource(object):
 
-    def __init__(self, data_uri=DEFAULT_DATA_URI, decimate_factor=1,
+    def __init__(self, data_uri=DEFAULT_DATA_URI, decimate_factor=10,
                  grdfile=None):
         self.data_uri = data_uri
         self.decimate_factor = decimate_factor
