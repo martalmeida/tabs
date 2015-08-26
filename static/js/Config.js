@@ -31,6 +31,10 @@ var Config = {
         fillOpacity: 0.5
     },
 
+    // Data Sources
+    enableVelocity: true,
+    enableSalinity: false,
+
 
     // Map view config
     minZoom: 7,

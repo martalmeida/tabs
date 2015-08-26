@@ -87,8 +87,12 @@ MapView = (function($, L, Models, Config) {
         };
 
         // Add visualization layers
-        self.saltView = SaltView.saltView(config).addTo(self);
-        self.velocityView = VelocityView.velocityView(config).addTo(self);
+        if (Config.enableSalinity) {
+            self.saltView = SaltView.saltView(config).addTo(self);
+        }
+        if (Config.enableVelocity) {
+            self.velocityView = VelocityView.velocityView(config).addTo(self);
+        }
 
         self.redraw();
 
