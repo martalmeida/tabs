@@ -25,6 +25,15 @@ app.py
   Flask application that ties it all together.  Serves the static
   files, and does the mapping between URLs and python functions.
 
+
+Installation
+------------
+We recommend using a virtualenv to install the application
+
+    virtualenv tabs-env
+    source tabs-env/bin/activate
+    pip install -r requirements.txt
+
 Running the application
 -----------------------
 
