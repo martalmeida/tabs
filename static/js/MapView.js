@@ -157,13 +157,13 @@ MapView = (function($, L, Models, Config) {
                 // XXX: Remove eventually
                 if (showFPS && ((self.currentFrame % showFPS) === 0)) {
                     var fps = showFPS / ((t - self.t) / 1000);
-                    var fps = fps.toFixed(2) + ' FPS';
+                    fps = fps.toFixed(2) + ' FPS';
                     var ms = waitTime.toFixed(0) + '/' + self.delay + 'ms';
                     console.log(fps + '\tdelay: ' + ms);
                     self.t = t;
                 }
 
-                setTimeout(function() {self._run()}, waitTime);
+                setTimeout(function() {self._run();}, waitTime);
             });
         }
     };
@@ -215,6 +215,6 @@ MapView = (function($, L, Models, Config) {
             }
         }
         return setLayerVisibilityInner;
-    };
+    }
 
 }(jQuery, L, Models, Config));
