@@ -190,6 +190,11 @@ def thredds_salt_frame(time_step):
         time_step, num_levels=num_levels, logspace=logspace)
     return json.dumps(salt)
 
+
+def main(debug=True, host='127.0.0.1', port=5000):
+    app.run(debug=debug, host=host, port=port)
+
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
@@ -199,7 +204,7 @@ if __name__ == '__main__':
                         default='127.0.0.1', const='0.0.0.0',
                         help="Listen on all interfaces")
     parser.add_argument('-d', '--decimate', type=int, action='store',
-                        default=60, help="Decimation factor")
+                        default=10, help="Decimation factor")
     parser.add_argument('-D', '--debug', action='store_true',
                         help="Debug mode")
 
@@ -207,4 +212,4 @@ if __name__ == '__main__':
     if args.decimate:
         tc._fs_args['decimate_factor'] = args.decimate
         del tc.fs
-    app.run(debug=args.debug, host=args.host, port=args.port)
+    main(debug=args.debug, host=args.host, port=args.port)
