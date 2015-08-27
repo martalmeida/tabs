@@ -7,7 +7,7 @@ except ImportError:
 
 setup(name='tabs',
       version='1.0dev',
-      description='TABS vector server',
+      description='TABS website',
       packages=['tabs'],
       package_dir={'tabs': 'tabs'},
       package_data={'tabs': ['static/tabs.html', 'static/js/*.js',
