@@ -101,6 +101,7 @@ class THREDDS_CONNECTION(object):
                     np.random.set_state(RANDOM_STATE)
                     cls = thredds_frame_source.THREDDSFrameSource
                     self._fs = cls(**self._fs_args)
+                    app.logger.info("THREDDS connection ready")
                 self._reset_timer()
                 return self._fs
 
@@ -144,6 +145,14 @@ def domain():
     """ Return the domain outline """
     filename = 'data/json/domain.json'
     return redirect(url_for('static', filename=filename))
+
+
+# Retrieve timestamps
+
+@app.route('/data/thredds/timestamps')
+def thredds_timestamps():
+    """ Return the timestamps for the available frames. """
+    return jsonify({'timestamps': tc.fs.epochSeconds.tolist()})
 
 
 # Retrieve the grid
