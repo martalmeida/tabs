@@ -3,7 +3,7 @@
 try:
     from setuptools import setup
 except ImportError:
-    from distut2ils.core import setup
+    from distutils.core import setup
 
 setup(name='tabs',
       version='1.0dev',
