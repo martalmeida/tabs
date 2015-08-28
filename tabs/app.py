@@ -2,6 +2,7 @@ from threading import Timer, RLock
 
 import numpy as np
 from flask import Flask, jsonify, make_response, redirect, request, url_for
+from flask.ext.compress import Compress
 
 from tabs import thredds_frame_source
 
@@ -44,6 +45,7 @@ class ReverseProxied(object):
 
 app = Flask(__name__)
 app.wsgi_app = ReverseProxied(app.wsgi_app)
+Compress(app)
 
 
 DECIMATE_FACTOR = 10
