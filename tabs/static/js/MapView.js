@@ -52,19 +52,19 @@ MapView = (function($, L, Models, Config) {
         });
 
         // Leaflet map object
-        this.map = L.map('map', {center: self.mapCenter,
+        self.map = L.map('map', {center: self.mapCenter,
                                  zoom: self.defaultZoom,
                                  layers: [mapboxTiles]});
 
         // Re-render when map conditions change
-        this.map.on('viewreset', function() {
+        self.map.on('viewreset', function() {
             if (self.runState === RUN_STOPPED) {
                 self.redraw();
             }
         });
 
         // Add map components
-        this.tabsControl = new TABSControl.tabsControl({
+        self.tabsControl = new TABSControl.tabsControl({
             nFrames: self.nFrames,
             onclick: function onclick() { self.toggleRunState(); }
         });
@@ -131,8 +131,8 @@ MapView = (function($, L, Models, Config) {
     MapView.prototype.mapScale = function mapScale() {
         var self = this;
         var scale = 0.5;     // vector scaling (m/s -> degrees) at default zoom
-        var zoom = this.map.getZoom();
-        return scale * Math.pow(2, this.defaultZoom - zoom);
+        var zoom = self.map.getZoom();
+        return scale * Math.pow(2, self.defaultZoom - zoom);
     };
 
 
@@ -140,8 +140,9 @@ MapView = (function($, L, Models, Config) {
     MapView.prototype.addRegionOutline = function addRegionOutline() {
         var self = this;
         var featureLayer = L.mapbox.featureLayer()
-            .loadURL(this.domainURL)
+            .loadURL(self.domainURL)
             .on('ready', function(layer) {
+                // NOT self
                 this.eachLayer(function(poly) {
                     poly.setStyle({
                         color: 'red',
@@ -149,28 +150,28 @@ MapView = (function($, L, Models, Config) {
                     });
                 });
             })
-            .addTo(this.map);
+            .addTo(self.map);
     };
 
 
     // update vector data at each time step
     MapView.prototype.showTimeStep = function showTimeStep(i, callback) {
         var self = this;
-        this.currentFrame = i;
-        this.sliderControl.value(i);
+        self.currentFrame = i;
+        self.sliderControl.value(i);
         L.Util.requestAnimFrame(function do_redraw() {
             this.redraw(callback);
-        }, this, true);
+        }, self, true);
     };
 
 
     MapView.prototype.start = function start(newState) {
         var self = this;
-        var prevState = this.runState;
-        this.runState = newState === undefined ? RUN_FOREVER : newState;
+        var prevState = self.runState;
+        self.runState = newState === undefined ? RUN_FOREVER : newState;
         if (prevState === RUN_STOPPED) {
             console.log('runnin!');
-            this._run();
+            self._run();
         }
     };
 
@@ -188,28 +189,33 @@ MapView = (function($, L, Models, Config) {
         }
 
         var t = Date.now();
-        this.showTimeStep(this.queuedFrame, function() {
-            var dirty = self._dirty();
-            // var waitTime = dirty ? 0 : Math.max(0, t - Date.now() + self.delay);
-            var waitTime = Math.max(0, t - Date.now() + self.delay);
+        self.showTimeStep(self.queuedFrame, function() {
+            var waitTime;
+
+            if (self._dirty()) {
+                waitTime = 0
+            } else {
+                waitTime = Math.max(0, t - Date.now() + self.delay);
+            }
+
 
             // XXX: Remove eventually
             if (showFPS && ((self.currentFrame % showFPS) === 0)) {
-                var fps = showFPS / ((t - self.t) / 1000);
-                fps = fps.toFixed(2) + ' FPS';
+                var fps = (showFPS / ((t - self.t) / 1000))
+                          .toFixed(2) + ' FPS';
                 var ms = waitTime.toFixed(0) + '/' + self.delay + 'ms';
                 console.log(fps + '\tdelay: ' + ms);
                 self.t = t;
             }
 
             // If we're caught up but we are supposed to keep
-            // going, then queue the next frame.
-            if (self.runState === RUN_FOREVER && !dirty) {
-                self.queueFrame();
-            }
-
+            // going, then queue the next frame. Otherwise stop.
             if (!self._dirty()) {
-                self.runState = RUN_STOPPED;
+                if (self.runState === RUN_FOREVER) {
+                    self.queueFrame();
+                } else {
+                    self.runState = RUN_STOPPED;
+                }
             }
             setTimeout(self._run.bind(self), waitTime);
         });
@@ -218,15 +224,15 @@ MapView = (function($, L, Models, Config) {
 
     MapView.prototype.stop = function stop() {
         var self = this;
-        this.runState = RUN_STOPPED;
+        self.runState = RUN_STOPPED;
     };
 
 
     MapView.prototype.redraw = function redraw(callback) {
         var self = this;
 
-        if (this.visibleLayers.velocity) {
-            this.velocityView && this.velocityView.redraw(
+        if (self.visibleLayers.velocity) {
+            self.velocityView && self.velocityView.redraw(
                 function vv_call(data) {
                     self.tabsControl && self.tabsControl.updateInfo(
                         {frame: self.currentFrame, date: data.date});
@@ -235,8 +241,8 @@ MapView = (function($, L, Models, Config) {
             );
         }
 
-        if (this.visibleLayers.salinity) {
-            this.saltView && this.saltView.redraw(
+        if (self.visibleLayers.salinity) {
+            self.saltView && self.saltView.redraw(
                 function salt_call(data) {
                     self.tabsControl && self.tabsControl.updateInfo(
                         {frame: self.currentFrame, date: data.date,
