@@ -2,7 +2,7 @@ import json
 from threading import Timer, RLock
 
 import numpy as np
-from flask import Flask, redirect, request, url_for
+from flask import Flask, make_response, redirect, request, url_for
 
 from tabs import thredds_frame_source
 
@@ -162,9 +162,15 @@ def static_grid():
 @app.route('/data/thredds/velocity/step/<int:time_step>')
 def thredds_velocity_frame(time_step):
     """ Return the velocity frame corresponding to `time_step`. """
-    vs = tc.fs.velocity_frame(time_step)
-    vs = jsonify_dict_of_array(vs)
-    return json.dumps(vs)
+    try:
+        vs = tc.fs.velocity_frame(time_step)
+        vs = jsonify_dict_of_array(vs)
+        return json.dumps(vs)
+    except Exception as e:
+        msg = 'No velocity available for time step {0:d}.'.format(time_step)
+        app.logger.error(msg)
+        app.logger.debug(str(e))
+        return make_response(msg, 404)
 
 
 @app.route('/data/prefetched/velocity/step/<int:time_step>')
@@ -184,6 +190,11 @@ def thredds_salt_frame(time_step):
         time_step, num_levels=num_levels, logspace=logspace)
     return json.dumps(salt)
 
+
+def main(debug=True, host='127.0.0.1', port=5000):
+    app.run(debug=debug, host=host, port=port)
+
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
@@ -193,7 +204,7 @@ if __name__ == '__main__':
                         default='127.0.0.1', const='0.0.0.0',
                         help="Listen on all interfaces")
     parser.add_argument('-d', '--decimate', type=int, action='store',
-                        default=60, help="Decimation factor")
+                        default=10, help="Decimation factor")
     parser.add_argument('-D', '--debug', action='store_true',
                         help="Debug mode")
 
@@ -201,4 +212,4 @@ if __name__ == '__main__':
     if args.decimate:
         tc._fs_args['decimate_factor'] = args.decimate
         del tc.fs
-    app.run(debug=args.debug, host=args.host, port=args.port)
+    main(debug=args.debug, host=args.host, port=args.port)

@@ -61,12 +61,6 @@ L.WebGLVectorLayer = L.Class.extend({
     // Set the matrix to some that makes 1 unit 1 pixel.
     this._pixelsToWebGLMatrix = new Float32Array(16);
     this._mapMatrix = new Float32Array(16);
-    this._pixelsToWebGLMatrix.set([2 / canvas.width,  0                , 0, 0,
-                                   0               , -2 / canvas.height, 0, 0,
-                                   0               ,  0                , 0, 0,
-                                  -1               ,  1                , 0, 1]);
-    gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.uniformMatrix4fv(this._u_matLoc, false, this._pixelsToWebGLMatrix);
     this.initialized = false;
   },
 
@@ -182,12 +176,7 @@ L.WebGLVectorLayer = L.Class.extend({
     gl.bindBuffer(gl.ARRAY_BUFFER, this.vertBuffer);
     gl.enableVertexAttribArray(this._vertLoc);
     gl.vertexAttribPointer(this._vertLoc, 2, gl.FLOAT, false, 0, 0);
-
-    this._pixelsToWebGLMatrix.set([2 / canvas.width,  0                , 0, 0,
-                                   0               , -2 / canvas.height, 0, 0,
-                                   0               ,  0                , 0, 0,
-                                  -1               ,  1                , 0, 1]);
-    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.uniformMatrix4fv(this._u_matLoc, false, this._pixelsToWebGLMatrix);
     this.initialized = true;
   },
 
@@ -340,6 +329,13 @@ L.WebGLVectorLayer = L.Class.extend({
   },
 
   onResize: function() {
+    var gl = this._ctx,
+        canvas = this.getCanvas();
+    this._pixelsToWebGLMatrix.set([2 / canvas.width,  0                , 0, 0,
+                                   0               , -2 / canvas.height, 0, 0,
+                                   0               ,  0                , 0, 0,
+                                  -1               ,  1                , 0, 1]);
+    gl.viewport(0, 0, canvas.width, canvas.height);
   },
 
   render: function() {
