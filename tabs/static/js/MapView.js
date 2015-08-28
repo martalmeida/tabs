@@ -107,6 +107,7 @@ MapView = (function($, L, Models, Config) {
 
 
     MapView.prototype.mapScale = function mapScale() {
+        var self = this;
         var scale = 0.5;     // vector scaling (m/s -> degrees) at default zoom
         var zoom = this.map.getZoom();
         return scale * Math.pow(2, this.defaultZoom - zoom);
@@ -115,6 +116,7 @@ MapView = (function($, L, Models, Config) {
 
     // hard-coded region of interest outline
     MapView.prototype.addRegionOutline = function addRegionOutline() {
+        var self = this;
         var featureLayer = L.mapbox.featureLayer()
             .loadURL(this.domainURL)
             .on('ready', function(layer) {
@@ -131,6 +133,7 @@ MapView = (function($, L, Models, Config) {
 
     // update vector data at each time step
     MapView.prototype.showTimeStep = function showTimeStep(i, callback) {
+        var self = this;
         this.currentFrame = i;
         this.sliderControl.value(i);
         L.Util.requestAnimFrame(function do_redraw() {
