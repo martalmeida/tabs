@@ -86,6 +86,11 @@ MapView = (function($, L, Models, Config) {
                 'overlayremove', _setLayerVisibility(self, key, layer, false));
         };
 
+        // Load timestamps for all frames
+        API.withFrameTimestamps({}, function(data) {
+            self.timestamps = data.timestamps;
+        });
+
         // Add visualization layers
         if (Config.enableSalinity) {
             self.saltView = SaltView.saltView(config).addTo(self);
