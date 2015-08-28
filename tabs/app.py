@@ -1,8 +1,8 @@
-import json
 from threading import Timer, RLock
 
 import numpy as np
-from flask import Flask, make_response, redirect, request, url_for
+from flask import Flask, jsonify, make_response, redirect, request, url_for
+from flask.ext.compress import Compress
 
 from tabs import thredds_frame_source
 
@@ -45,6 +45,7 @@ class ReverseProxied(object):
 
 app = Flask(__name__)
 app.wsgi_app = ReverseProxied(app.wsgi_app)
+Compress(app)
 
 
 DECIMATE_FACTOR = 10
@@ -119,13 +120,14 @@ tc = THREDDS_CONNECTION(data_uri=thredds_frame_source.DEFAULT_DATA_URI,
 
 
 def jsonify_dict_of_array(obj):
-    """ Return a copy of obj with list and array values turned into lists that
-    have been rounded to four decimals. """
+    """Return a jsonified copy of obj with list and array values turned into
+    lists that have been rounded to four decimals.
+    """
     obj = obj.copy()
     for k in obj:
         if isinstance(obj[k], (np.ndarray, list)):
             obj[k] = np.asarray(obj[k]).round(4).tolist()
-    return obj
+    return jsonify(obj)
 
 
 @app.route('/')
@@ -147,7 +149,7 @@ def domain():
 @app.route('/data/thredds/velocity/grid')
 def thredds_grid():
     """ Return the grid points for the velocity frames. """
-    return json.dumps(jsonify_dict_of_array(tc.fs.velocity_grid))
+    return jsonify_dict_of_array(tc.fs.velocity_grid)
 
 
 @app.route('/data/prefetched/velocity/grid')
@@ -164,8 +166,7 @@ def thredds_velocity_frame(time_step):
     """ Return the velocity frame corresponding to `time_step`. """
     try:
         vs = tc.fs.velocity_frame(time_step)
-        vs = jsonify_dict_of_array(vs)
-        return json.dumps(vs)
+        return jsonify_dict_of_array(vs)
     except Exception as e:
         msg = 'No velocity available for time step {0:d}.'.format(time_step)
         app.logger.error(msg)
@@ -188,7 +189,7 @@ def thredds_salt_frame(time_step):
     logspace = 'logspace' in request.args
     salt = tc.fs.salt_frame(
         time_step, num_levels=num_levels, logspace=logspace)
-    return json.dumps(salt)
+    return jsonify(salt)
 
 
 def main(debug=True, host='127.0.0.1', port=5000):
