@@ -1,5 +1,9 @@
 MapView = (function($, L, Models, Config) {
 
+    var RUN_STOPPED = 0;
+    var RUN_SYNC = 1;
+    var RUN_FOREVER = 2;
+
     var defaults = {
 
         visibleLayers: Config.visibleLayers,
@@ -8,7 +12,7 @@ MapView = (function($, L, Models, Config) {
         delay: Config.delay,
 
         // Does the animation automatically start?
-        isRunning: Config.isRunning,
+        runState: RUN_STOPPED,
 
         // Number of time steps to use
         nFrames: Config.nFrames,
@@ -35,7 +39,11 @@ MapView = (function($, L, Models, Config) {
 
         $.extend(self, defaults, config);
 
+        // The frame we're looking at
         self.currentFrame = 0;
+
+        // The frame we'd like to load
+        self.queuedFrame = 0;
 
         var mapboxTiles = L.tileLayer(self.tileLayerURL, {
             attribution: self.attribution,
@@ -50,7 +58,7 @@ MapView = (function($, L, Models, Config) {
 
         // Re-render when map conditions change
         this.map.on('viewreset', function() {
-            if (!self.isRunning) {
+            if (self.runState === RUN_STOPPED) {
                 self.redraw();
             }
         });
@@ -58,16 +66,17 @@ MapView = (function($, L, Models, Config) {
         // Add map components
         this.tabsControl = new TABSControl.tabsControl({
             nFrames: self.nFrames,
-            onclick: function onclick() {
-                self.isRunning ? self.stop() : self.start();
-            }
+            onclick: function onclick() { self.toggleRunState(); }
         });
         self.tabsControl.addTo(self.map);
 
         self.sliderControl = L.control.sliderControl({
             minValue: 0,
             maxValue: self.nFrames,
-            slide: function(e, ui) {self.showTimeStep(ui.value);}
+            slide: function(e, ui) {
+                self.queueFrame(ui.value);
+                self.start(RUN_SYNC);
+            }
         });
         self.map.addControl(self.sliderControl);
         self.sliderControl.startSlider();
@@ -98,11 +107,24 @@ MapView = (function($, L, Models, Config) {
 
         // Register hotkeys
         window.onkeypress = function startStop(oKeyEvent) {
-            if (oKeyEvent.charCode === 32) {
-                self.isRunning ? self.stop() : self.start();
-            }
+            if (oKeyEvent.charCode === 32) { self.toggleRunState(); }
         };
 
+    };
+
+    MapView.prototype.toggleRunState = function toggleRunState() {
+        var self = this;
+        if (self.runState === RUN_STOPPED) {
+            self.start(RUN_FOREVER);
+        } else {
+            self.stop();
+        }
+    };
+
+    MapView.prototype.queueFrame = function queueFrame(i) {
+        var self = this;
+        var nxt = i === undefined ? (self.currentFrame + 1) % self.nFrames : i;
+        self.queuedFrame = nxt;
     };
 
 
@@ -142,38 +164,61 @@ MapView = (function($, L, Models, Config) {
     };
 
 
-    MapView.prototype.start = function start() {
-        this.isRunning = true;
-        this.t = Date.now();
-        this._run();
+    MapView.prototype.start = function start(newState) {
+        var self = this;
+        var prevState = this.runState;
+        this.runState = newState === undefined ? RUN_FOREVER : newState;
+        if (prevState === RUN_STOPPED) {
+            console.log('runnin!');
+            this._run();
+        }
+    };
+
+
+    MapView.prototype._dirty = function _dirty() {
+        var self = this;
+        return self.currentFrame !== self.queuedFrame;
     };
 
 
     MapView.prototype._run = function _run() {
         var self = this;
-        if (this.isRunning) {
-            var t = Date.now();
-            self.currentFrame = (self.currentFrame + 1) % self.nFrames;
-            this.showTimeStep(this.currentFrame, function() {
-                var waitTime = Math.max(0, self.delay - (Date.now() - t));
-
-                // XXX: Remove eventually
-                if (showFPS && ((self.currentFrame % showFPS) === 0)) {
-                    var fps = showFPS / ((t - self.t) / 1000);
-                    fps = fps.toFixed(2) + ' FPS';
-                    var ms = waitTime.toFixed(0) + '/' + self.delay + 'ms';
-                    console.log(fps + '\tdelay: ' + ms);
-                    self.t = t;
-                }
-
-                setTimeout(function() {self._run();}, waitTime);
-            });
+        if (self.runState === RUN_STOPPED) {
+            return;
         }
+
+        var t = Date.now();
+        this.showTimeStep(this.queuedFrame, function() {
+            var dirty = self._dirty();
+            // var waitTime = dirty ? 0 : Math.max(0, t - Date.now() + self.delay);
+            var waitTime = Math.max(0, t - Date.now() + self.delay);
+
+            // XXX: Remove eventually
+            if (showFPS && ((self.currentFrame % showFPS) === 0)) {
+                var fps = showFPS / ((t - self.t) / 1000);
+                fps = fps.toFixed(2) + ' FPS';
+                var ms = waitTime.toFixed(0) + '/' + self.delay + 'ms';
+                console.log(fps + '\tdelay: ' + ms);
+                self.t = t;
+            }
+
+            // If we're caught up but we are supposed to keep
+            // going, then queue the next frame.
+            if (self.runState === RUN_FOREVER && !dirty) {
+                self.queueFrame();
+            }
+
+            if (!self._dirty()) {
+                self.runState = RUN_STOPPED;
+            }
+            setTimeout(self._run.bind(self), waitTime);
+        });
     };
 
 
     MapView.prototype.stop = function stop() {
-        this.isRunning = false;
+        var self = this;
+        this.runState = RUN_STOPPED;
     };
 
 
