@@ -114,10 +114,10 @@ MapView = (function($, L, Models, Config) {
 
     MapView.prototype.toggleRunState = function toggleRunState() {
         var self = this;
-        if (self.runState === RUN_STOPPED) {
+        if (self.runState !== RUN_FOREVER) {
             self.start(RUN_FOREVER);
         } else {
-            self.stop();
+            self.start(RUN_SYNC);
         }
     };
 
@@ -214,7 +214,7 @@ MapView = (function($, L, Models, Config) {
                 if (self.runState === RUN_FOREVER) {
                     self.queueFrame();
                 } else {
-                    self.runState = RUN_STOPPED;
+                    self.stop();
                 }
             }
             setTimeout(self._run.bind(self), waitTime);
