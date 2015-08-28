@@ -1,4 +1,6 @@
+import argparse
 import json
+import sys
 from threading import Timer, RLock
 
 import numpy as np
@@ -191,12 +193,11 @@ def thredds_salt_frame(time_step):
     return json.dumps(salt)
 
 
-def main(debug=True, host='127.0.0.1', port=5000):
+def start(debug=True, host='127.0.0.1', port=5000):
     app.run(debug=debug, host=host, port=port)
 
 
-if __name__ == '__main__':
-    import argparse
+def main(argv=sys.argv[1:]):
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--port', type=int, default=5000,
                         help="Port to listen on")
@@ -208,8 +209,12 @@ if __name__ == '__main__':
     parser.add_argument('-D', '--debug', action='store_true',
                         help="Debug mode")
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     if args.decimate:
         tc._fs_args['decimate_factor'] = args.decimate
         del tc.fs
-    main(debug=args.debug, host=args.host, port=args.port)
+    start(debug=args.debug, host=args.host, port=args.port)
+
+
+if __name__ == '__main__':
+    main()
