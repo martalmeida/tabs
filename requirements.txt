@@ -3,6 +3,7 @@ certifi==14.5.14
 configobj==5.0.6
 curl==7.43.0
 flask==0.10.1
+Flask-Compress==1.2.1
 freetype==2.5.3
 geos==3.4.2
 hdf5==1.8.15.1
