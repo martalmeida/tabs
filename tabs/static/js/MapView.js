@@ -208,7 +208,8 @@ MapView = (function($, L, Models, Config) {
 
 
             // XXX: Remove eventually
-            if (showFPS && ((self.currentFrame % showFPS) === 0)) {
+            var reportableFrame = (self.currentFrame % showFPS) === 0;
+            if (showFPS && self.runState === RUN_FOREVER && reportableFrame) {
                 var fps = (showFPS / ((t - self.t) / 1000))
                           .toFixed(2) + ' FPS';
                 var ms = waitTime.toFixed(0) + '/' + self.delay + 'ms';
