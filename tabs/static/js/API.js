@@ -3,7 +3,7 @@ API = (function(Config, $) {
     var _json = {};
 
     function withJSON(url, callback) {
-        if (_json[url] == undefined) {
+        if (_json[url] === undefined) {
             $.getJSON(url, function(json) {
                 _json[url] = json;
                 if (callback === undefined) console.log('Callback undefined');
@@ -29,15 +29,31 @@ API = (function(Config, $) {
         withJSON(urlForSaltFrame(options), callback);
     }
 
+    function withFrameTimestamps(options, callback) {
+        withJSON(urlForTimestamps(options), callback);
+    }
+
     return {
         withJSON: withJSON,
         withVelocityFrameJSON: withVelocityFrameJSON,
         withVelocityGridLocationsJSON: withVelocityGridLocationsJSON,
-        withSaltFrameJSON: withSaltFrameJSON
+        withSaltFrameJSON: withSaltFrameJSON,
+        withFrameTimestamps: withFrameTimestamps
     };
 
 
     // Private functions
+
+    function urlForTimestamps(options) {
+        if (options.dataset === undefined) {
+            console.log('options.dataset undefined');
+            options.dataset = '';
+        }
+        url = Config.timestampURL;
+        var query = $.query
+            .set('dataset', options.dataset);
+        return url + query;
+    }
 
     function urlForVelocityFrame(options) {
         if (options.frame === undefined) {

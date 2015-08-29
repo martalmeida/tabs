@@ -36,7 +36,8 @@ class THREDDSFrameSource(object):
         else:
             self.ncg = netCDF.Dataset(grdfile)
 
-        self.dates = netCDF.num2date(self.nc.variables['ocean_time'][:],
+        self.epochSeconds = self.nc.variables['ocean_time'][:].astype(int)
+        self.dates = netCDF.num2date(self.epochSeconds,
                                      'seconds since 1970-01-01')
 
         self._configure_velocity_grid()

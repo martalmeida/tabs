@@ -76,6 +76,10 @@ MapView = (function($, L, Models, Config) {
             slide: function(e, ui) {
                 self.queueFrame(ui.value);
                 self.start(RUN_SYNC);
+            },
+            renderValue: function(value) {
+                var seconds = self.timestamps[value] * 1e3;
+                return renderDate(new Date(seconds));
             }
         });
         self.map.addControl(self.sliderControl);
@@ -94,6 +98,11 @@ MapView = (function($, L, Models, Config) {
             self.map.on(
                 'overlayremove', _setLayerVisibility(self, key, layer, false));
         };
+
+        // Load timestamps for all frames
+        API.withFrameTimestamps({}, function(data) {
+            self.timestamps = data.timestamps;
+        });
 
         // Add visualization layers
         if (Config.enableSalinity) {
@@ -193,7 +202,7 @@ MapView = (function($, L, Models, Config) {
             var waitTime;
 
             if (self._dirty()) {
-                waitTime = 0
+                waitTime = 0;
             } else {
                 waitTime = Math.max(0, t - Date.now() + self.delay);
             }
@@ -269,6 +278,15 @@ MapView = (function($, L, Models, Config) {
             }
         }
         return setLayerVisibilityInner;
+    }
+
+    function renderDate(d) {
+        var day_month_year = [d.getUTCDate().padLeft(),
+                              Config.monthStrings[d.getUTCMonth()],
+                              d.getFullYear()].join(' '),
+            hour_min = [d.getHours().padLeft(),
+                        d.getMinutes().padLeft()].join(':');
+        return day_month_year + ' ' + hour_min + ' UTC';
     }
 
 }(jQuery, L, Models, Config));
