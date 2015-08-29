@@ -218,10 +218,15 @@ def main(argv=sys.argv[1:]):
                         default=10, help="Decimation factor")
     parser.add_argument('-D', '--debug', action='store_true',
                         help="Debug mode")
+    parser.add_argument('--cached', action='store_true',
+                        help='Use cached data.')
 
     args = parser.parse_args(argv)
     if args.decimate:
         tc._fs_args['decimate_factor'] = args.decimate
+        del tc.fs
+    if args.cached:
+        tc._fs_args['data_uri'] = thredds_frame_source.CACHE_DATA_URI
         del tc.fs
     start(debug=args.debug, host=args.host, port=args.port)
 
