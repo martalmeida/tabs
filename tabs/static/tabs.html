@@ -18,23 +18,37 @@
 
         <!-- vertex shader -->
         <script id="vshader" type="x-shader/x-vertex">
+            precision mediump float;
             uniform mat4 u_matrix;
             attribute vec4 a_vertex;
+            attribute float a_color;
+            varying float v_color;
             void main() {
                 // multiply each vertex by a matrix.
                 gl_Position = u_matrix * a_vertex;
+                v_color = a_color;
             }
         </script>
 
         <!-- fragment shader -->
         <script id="fshader" type="x-shader/x-fragment">
             precision mediump float;
+
+
+            // The color palette
+            uniform sampler2D u_palette;
+            uniform float u_paletteFactor;
+
+            // This pixels color (from vertex shader)
+            varying float v_color;
+
+            float idx;
             void main() {
-
-                gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
-
+                idx = v_color * u_paletteFactor; // + u_paletteFactor * 0.5;
+                gl_FragColor = texture2D(u_palette, vec2(idx, 0));
             }
         </script>
+
 
         <script src="js/polyfill.js"></script>
         <script src="js/SliderControl.js"></script>
