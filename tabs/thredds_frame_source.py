@@ -18,7 +18,7 @@ from octant_lite import rot2d, shrink
 TABS_DATA_URI = 'http://barataria.tamu.edu:8080/thredds/dodsC/NcML/txla_nesting6.nc'  # noqa
 CACHE_DATA_URI = os.path.join(os.path.dirname(__file__),
                               "../static/data/txla_nesting6.nc")
-DEFAULT_DATA_URI = CACHE_DATA_URI
+DEFAULT_DATA_URI = TABS_DATA_URI
 
 
 class THREDDSFrameSource(object):
@@ -36,7 +36,8 @@ class THREDDSFrameSource(object):
         else:
             self.ncg = netCDF.Dataset(grdfile)
 
-        self.dates = netCDF.num2date(self.nc.variables['ocean_time'][:],
+        self.epochSeconds = self.nc.variables['ocean_time'][:].astype(int)
+        self.dates = netCDF.num2date(self.epochSeconds,
                                      'seconds since 1970-01-01')
 
         self._configure_velocity_grid()

@@ -78,9 +78,6 @@ var VelocityView = (function($, L, Models, Config) {
                            points: points,
                            mapScale: mapView.mapScale()};
 
-            // Put the initial velocity vectors on the map
-            self.redraw();
-
         });
 
         return self;

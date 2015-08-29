@@ -101,6 +101,7 @@ class THREDDS_CONNECTION(object):
                     np.random.set_state(RANDOM_STATE)
                     cls = thredds_frame_source.THREDDSFrameSource
                     self._fs = cls(**self._fs_args)
+                    app.logger.info("THREDDS connection ready")
                 self._reset_timer()
                 return self._fs
 
@@ -144,6 +145,14 @@ def domain():
     """ Return the domain outline """
     filename = 'data/json/domain.json'
     return redirect(url_for('static', filename=filename))
+
+
+# Retrieve timestamps
+
+@app.route('/data/thredds/timestamps')
+def thredds_timestamps():
+    """ Return the timestamps for the available frames. """
+    return jsonify({'timestamps': tc.fs.epochSeconds.tolist()})
 
 
 # Retrieve the grid
@@ -209,10 +218,15 @@ def main(argv=sys.argv[1:]):
                         default=10, help="Decimation factor")
     parser.add_argument('-D', '--debug', action='store_true',
                         help="Debug mode")
+    parser.add_argument('--cached', action='store_true',
+                        help='Use cached data.')
 
     args = parser.parse_args(argv)
     if args.decimate:
         tc._fs_args['decimate_factor'] = args.decimate
+        del tc.fs
+    if args.cached:
+        tc._fs_args['data_uri'] = thredds_frame_source.CACHE_DATA_URI
         del tc.fs
     start(debug=args.debug, host=args.host, port=args.port)
 

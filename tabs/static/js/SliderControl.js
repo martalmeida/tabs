@@ -79,7 +79,7 @@ L.Control.SliderControl = L.Control.extend({
     },
 
     startSlider: function () {
-        _options = this.options;
+        var _options = this.options;
         $("#leaflet-slider").slider({
             range: _options.range,
             value: _options.minValue,
@@ -87,8 +87,10 @@ L.Control.SliderControl = L.Control.extend({
             max: _options.maxValue,
             step: 1,
             slide: function (e, ui) {
-                var map = _options.map;
-                $('#slider-timestamp').html(ui.value);
+                var map = _options.map,
+                    render =  _options.renderValue;
+                var rendered = render && render(ui.value) || ui.value;
+                $('#slider-timestamp').html(rendered);
                 _options.slide && _options.slide(e, ui);
             }
         });
