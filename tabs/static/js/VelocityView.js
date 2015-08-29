@@ -100,7 +100,7 @@ var VelocityView = (function($, L, Models, Config) {
             var lines = data.vectors.slice(0, self.numVectorsToDisplay * 3);
 
             // XXX: We could be passing colors here now
-            self.glOverlay.setLines(lines);
+            self.glOverlay.setLines(lines, {41: 2, 32: 7, 305: 4});
             callback && callback(data);
         });
     };
