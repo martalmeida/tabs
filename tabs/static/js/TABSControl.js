@@ -1,12 +1,9 @@
-var TABSControl = (function() {
+var TABSControl = (function(Config) {
 
     Number.prototype.padLeft = function(width, chr) {
         var len = ((width || 2) - String(this).length) + 1;
         return len > 0 ? new Array(len).join(chr || '0') + this : this;
     };
-
-    var monthStrings = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     var defaults = {
         nFrames: 0
@@ -89,7 +86,7 @@ var TABSControl = (function() {
 
         _renderDate: function renderDate(d) {
             var day_month_year = [d.getUTCDate().padLeft(),
-                                  monthStrings[d.getUTCMonth()],
+                                  Config.monthStrings[d.getUTCMonth()],
                                   d.getFullYear()].join(' ');
             var hour_min = [d.getHours().padLeft(),
                             d.getMinutes().padLeft()].join(':');
@@ -104,4 +101,4 @@ var TABSControl = (function() {
         }
     };
 
-}());
+}(Config));
