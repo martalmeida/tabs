@@ -98,6 +98,8 @@ var VelocityView = (function($, L, Models, Config) {
         self.vfs.withVelocityFrame(options, function(data) {
             // Three lines per arrow
             var lines = data.vectors.slice(0, self.numVectorsToDisplay * 3);
+
+            // XXX: We could be passing colors here now
             self.glOverlay.setLines(lines);
             callback && callback(data);
         });

@@ -121,8 +121,6 @@ L.WebGLVectorLayer = L.Class.extend({
     gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
     gl.enableVertexAttribArray(this._colorLoc);
     gl.vertexAttribPointer(this._colorLoc, 1, gl.UNSIGNED_BYTE, false, 0, 0);
-
-    this.allBlackColors = new Uint8Array(this._numPoints);
   },
 
   _createCanvas: function() {
@@ -239,15 +237,14 @@ L.WebGLVectorLayer = L.Class.extend({
     //
 
     // Get space if needed
-     this.allocateBuffers(lines.length);
-    if (colors === undefined) {
-      colors = this.allBlackColors;
-    }
+    this.allocateBuffers(lines.length);
     var vidx = 0;
     var cidx = 0;
 
+    colors = colors || {};
+
     for (var i = 0; i < lines.length; i++) {
-      var color = i % this.paletteSize; //colors[i];
+      var color = colors[i] | 0;
       // First point in the line
       var pixel = this.latLongToPixelXY(lines[i][0][0], lines[i][0][1]);
       this.vertArray[vidx++] = pixel.x;
@@ -270,7 +267,7 @@ L.WebGLVectorLayer = L.Class.extend({
     // Copy color data to GPU
     gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.colorArray, gl.STATIC_DRAW);
-    // this.redraw();
+    this.redraw();
   },
 
   // _animateZoom: function (e) {
