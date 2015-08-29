@@ -179,7 +179,6 @@ MapView = (function($, L, Models, Config) {
         var prevState = self.runState;
         self.runState = newState === undefined ? RUN_FOREVER : newState;
         if (prevState === RUN_STOPPED) {
-            console.log('runnin!');
             self._run();
         }
     };
