@@ -25,7 +25,7 @@ MapView = (function($, L, Models, Config) {
 
         tileLayerURL: Config.tileLayerURL,
 
-        attribution: '<a href="http://www.mapbox.com/about/maps/" target="_blank">Terms &amp; Feedback</a>',
+        attribution: "© <a href='https://www.mapbox.com/map-feedback/'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap contributors</a>",
 
         // Outline of the region of interest
         domainURL: Config.domainURL
