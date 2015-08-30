@@ -5,6 +5,30 @@ import numpy as np
 from tabs.thredds_frame_source import THREDDSFrameSource
 
 
+def fget(self):
+    with self._fs_lock:
+        if not self._fs:
+            self.app.logger.info("Opening new THREDDS connection")
+            # Ensure that we get the same ordering of grid points
+            np.random.set_state(self.random_state)
+            cls = THREDDSFrameSource
+            self._fs = cls(**self._fs_args)
+        self._reset_timer()
+        return self._fs
+
+
+def fset(self, value):
+    with self._fs_lock:
+        self._fs = value
+        self._reset_timer()
+        return self._fs
+
+
+def fdel(self):
+    with self._fs_lock:
+        self._forget()
+
+
 class ThreddsConnection(object):
 
     def __init__(self, app, random_state, timeout=300.0, **fs_args):
@@ -42,28 +66,4 @@ class ThreddsConnection(object):
         self._timer = Timer(self.timeout, self._forget)
         self._timer.start()
 
-    def fs():
-        doc = "The fs property."
-
-        def fget(self):
-            with self._fs_lock:
-                if not self._fs:
-                    self.app.logger.info("Opening new THREDDS connection")
-                    # Ensure that we get the same ordering of grid points
-                    np.random.set_state(self.random_state)
-                    cls = THREDDSFrameSource
-                    self._fs = cls(**self._fs_args)
-                self._reset_timer()
-                return self._fs
-
-        def fset(self, value):
-            with self._fs_lock:
-                self._fs = value
-                self._reset_timer()
-                return self._fs
-
-        def fdel(self):
-            with self._fs_lock:
-                self._forget()
-        return locals()
-    fs = property(**fs())
+    fs = property(fset=fset, fget=fget, fdel=fdel)
