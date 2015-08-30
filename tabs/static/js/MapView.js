@@ -86,10 +86,13 @@ MapView = (function($, L, Models, Config) {
                                'leaflet-control'].join(' ');
                 this.container = L.DomUtil.create('div', classes);
 
-                this.container.innerHTML = self.dataSource;
-                L.DomEvent.on(this.container, 'click', L.DomEvent.stopPropagation);
-                L.DomEvent.on(this.container, 'click', this.options.onclick);
-                L.DomEvent.on(this.container, 'click', this.updateText);
+                this.updateText();
+
+                L.DomEvent.on(this.container, 'click', function(event) {
+                    L.DomEvent.stopPropagation(event);
+                    this.options.onclick(event);
+                    this.updateText(event);
+                });
                 return this.container;
             },
             updateText: function() {
