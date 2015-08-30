@@ -73,6 +73,34 @@ MapView = (function($, L, Models, Config) {
         });
         self.tabsControl.addTo(self.map);
 
+        L.Control.Toggle = L.Control.extend({
+            options: {
+                position: 'topright',
+                onclick: function onclick() { self.changeDataSource(); }
+            },
+            onAdd: function(map) {
+                this._map = map;
+
+                var classes = ['tabs-control',
+                               'leaflet-control-attribution',
+                               'leaflet-control'].join(' ');
+                this.container = L.DomUtil.create('div', classes);
+
+                this.container.innerHTML = self.dataSource;
+                L.DomEvent.on(this.container, 'click', L.DomEvent.stopPropagation);
+                L.DomEvent.on(this.container, 'click', this.options.onclick);
+                L.DomEvent.on(this.container, 'click', this.updateText);
+                return this.container;
+            },
+            updateText: function() {
+                console.log('Switch data source to', self.dataSource);
+                self.dataSourceButton.container.innerHTML = self.dataSource;
+            }
+
+        });
+        self.dataSourceButton = new L.Control.Toggle;
+        self.dataSourceButton.addTo(self.map);
+
         self.sliderControl = L.control.sliderControl({
             minValue: 0,
             maxValue: self.nFrames,
