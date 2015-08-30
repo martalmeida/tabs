@@ -50,7 +50,7 @@ var Config = {
     isRunning: true,
 
     // Number of time steps to use
-    nFrames: 90,
+    nFrames: 30,
 
     // Distance scale configuration
     distanceScaleOptions: {

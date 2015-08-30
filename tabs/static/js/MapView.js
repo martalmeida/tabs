@@ -14,6 +14,9 @@ MapView = (function($, L, Models, Config) {
         // Does the animation automatically start?
         runState: RUN_STOPPED,
 
+        // Use forecast or hindcast data?
+        dataSource: 'hindcast',
+
         // Number of time steps to use
         nFrames: Config.nFrames,
 
@@ -25,7 +28,7 @@ MapView = (function($, L, Models, Config) {
 
         tileLayerURL: Config.tileLayerURL,
 
-        attribution: '<a href="http://www.mapbox.com/about/maps/" target="_blank">Terms &amp; Feedback</a>',
+        attribution: "© <a href='https://www.mapbox.com/map-feedback/'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap contributors</a>",
 
         // Outline of the region of interest
         domainURL: Config.domainURL
@@ -70,6 +73,38 @@ MapView = (function($, L, Models, Config) {
         });
         self.tabsControl.addTo(self.map);
 
+        L.Control.Toggle = L.Control.extend({
+            options: {
+                position: 'topright',
+                onclick: function onclick() { self.changeDataSource(); }
+            },
+            onAdd: function(map) {
+                var self = this;
+                this._map = map;
+
+                var classes = ['tabs-control',
+                               'leaflet-control-attribution',
+                               'leaflet-control'].join(' ');
+                this.container = L.DomUtil.create('div', classes);
+
+                this.updateText();
+
+                L.DomEvent.on(this.container, 'click', function(event) {
+                    L.DomEvent.stopPropagation(event);
+                    self.options.onclick(event);
+                    self.updateText(event);
+                });
+                return this.container;
+            },
+            updateText: function() {
+                console.log('Switch data source to', self.dataSource);
+                self.dataSourceButton.container.innerHTML = self.dataSource;
+            }
+
+        });
+        self.dataSourceButton = new L.Control.Toggle;
+        self.dataSourceButton.addTo(self.map);
+
         self.sliderControl = L.control.sliderControl({
             minValue: 0,
             maxValue: self.nFrames,
@@ -100,7 +135,8 @@ MapView = (function($, L, Models, Config) {
         };
 
         // Load timestamps for all frames
-        API.withFrameTimestamps({}, function(data) {
+        var options = {datasource: self.dataSource};
+        API.withFrameTimestamps(options, function(data) {
             self.timestamps = data.timestamps;
         });
 
@@ -127,6 +163,31 @@ MapView = (function($, L, Models, Config) {
             self.start(RUN_FOREVER);
         } else {
             self.start(RUN_SYNC);
+        }
+    };
+
+    MapView.prototype.changeDataSource = function changeDataSource() {
+        var self = this;
+        if (self.dataSource !== 'hindcast') {
+            self.dataSource = 'hindcast';
+        } else {
+            self.dataSource = 'forecast';
+        }
+        self.start(RUN_SYNC);
+        // clear vector cache
+        self.velocityView.clearCache();
+        // reload timestamps for all frames
+        var options = {datasource: self.dataSource};
+        API.withFrameTimestamps(options, function(data) {
+            self.timestamps = data.timestamps;
+            // reset the number of frames
+            self.nFrames = self.timestamps.length;
+            self.tabsControl.nFrames = self.nFrames;
+        });
+        self.currentFrame = 0;
+        if (self.visibleLayers.velocity) {
+            self.velocityView && self.velocityView.resetGrid()
+            self.redraw();
         }
     };
 

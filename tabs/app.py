@@ -1,12 +1,11 @@
 import argparse
 import sys
-from threading import Timer, RLock
 
 import numpy as np
 from flask import Flask, jsonify, make_response, redirect, request, url_for
 from flask.ext.compress import Compress
 
-from tabs import thredds_frame_source
+from tabs.thredds_connection import ThreddsConnection, HINDCAST_CACHE_DATA_URI
 
 
 class ReverseProxied(object):
@@ -54,72 +53,8 @@ DECIMATE_FACTOR = 10
 RANDOM_STATE = np.random.get_state()
 
 
-# We should probably maintain a connection for at least a short while
-class THREDDS_CONNECTION(object):
-
-    def __init__(self, timeout=300.0, **fs_args):
-        """ Create an expiring connection to the THREDDS server.
-
-        The connection will drop after 5 minutes of non-use. Any subsequent
-        attempt to use the connection will initiate a new one. Access to the
-        connection is RLock'd to ensure only one connection is alive at a time.
-
-        Parameters:
-        timeout : int, seconds
-            The lenght of time in seconds to hold open a connection.
-
-        Remaining keyword args are passed to the connection's constructor.
-        """
-        self._fs = None
-        self._fs_lock = RLock()
-        self._fs_args = fs_args
-        self._timer = None
-        self.timeout = float(timeout)
-
-    def _forget(self):
-        app.logger.info("Closing THREDDS connection")
-        if self._timer:
-            self._timer.cancel()
-            self._timer = None
-        self._fs = None
-
-    def _reset_timer(self):
-        app.logger.info("Resetting THREDDS connection timer")
-        if self._timer:
-            self._timer.cancel()
-        self._timer = Timer(self.timeout, self._forget)
-        self._timer.start()
-
-    def fs():
-        doc = "The fs property."
-
-        def fget(self):
-            with self._fs_lock:
-                if not self._fs:
-                    app.logger.info("Opening new THREDDS connection")
-                    # Ensure that we get the same ordering of grid points
-                    np.random.set_state(RANDOM_STATE)
-                    cls = thredds_frame_source.THREDDSFrameSource
-                    self._fs = cls(**self._fs_args)
-                    app.logger.info("THREDDS connection ready")
-                self._reset_timer()
-                return self._fs
-
-        def fset(self, value):
-            with self._fs_lock:
-                self._fs = value
-                self._reset_timer()
-                return self._fs
-
-        def fdel(self):
-            with self._fs_lock:
-                self._forget()
-        return locals()
-    fs = property(**fs())
-
-
-tc = THREDDS_CONNECTION(data_uri=thredds_frame_source.DEFAULT_DATA_URI,
-                        decimate_factor=DECIMATE_FACTOR)
+tc = ThreddsConnection(app, random_state=RANDOM_STATE,
+                       decimate_factor=DECIMATE_FACTOR)
 
 
 def jsonify_dict_of_array(obj):
@@ -131,6 +66,16 @@ def jsonify_dict_of_array(obj):
         if isinstance(obj[k], (np.ndarray, list)):
             obj[k] = np.asarray(obj[k]).round(4).tolist()
     return jsonify(obj)
+
+
+def get_fs(datasource):
+    """ Return the right frame source from the THREDDS connection. """
+    if datasource == 'hindcast':
+        return tc.hindcast_fs
+    elif datasource == 'forecast':
+        return tc.forecast_fs
+    else:
+        raise ValueError('Unknown data source {0}'.format(datasource))
 
 
 @app.route('/')
@@ -152,7 +97,9 @@ def domain():
 @app.route('/data/thredds/timestamps')
 def thredds_timestamps():
     """ Return the timestamps for the available frames. """
-    return jsonify({'timestamps': tc.fs.epochSeconds.tolist()})
+    datasource = request.args.get('datasource', 'hindcast')
+    fs = get_fs(datasource)
+    return jsonify({'timestamps': fs.epochSeconds.tolist()})
 
 
 # Retrieve the grid
@@ -160,7 +107,9 @@ def thredds_timestamps():
 @app.route('/data/thredds/velocity/grid')
 def thredds_grid():
     """ Return the grid points for the velocity frames. """
-    return jsonify_dict_of_array(tc.fs.velocity_grid)
+    datasource = request.args.get('datasource', 'hindcast')
+    fs = get_fs(datasource)
+    return jsonify_dict_of_array(fs.velocity_grid)
 
 
 @app.route('/data/prefetched/velocity/grid')
@@ -175,8 +124,11 @@ def static_grid():
 @app.route('/data/thredds/velocity/step/<int:time_step>')
 def thredds_velocity_frame(time_step):
     """ Return the velocity frame corresponding to `time_step`. """
+    datasource = request.args.get('datasource', 'hindcast')
+    app.logger.info(datasource)
+    fs = get_fs(datasource)
     try:
-        vs = tc.fs.velocity_frame(time_step)
+        vs = fs.velocity_frame(time_step)
         return jsonify_dict_of_array(vs)
     except Exception as e:
         msg = 'No velocity available for time step {0:d}.'.format(time_step)
@@ -198,7 +150,9 @@ def static_velocity_frame(time_step):
 def thredds_salt_frame(time_step):
     num_levels = request.args.get('numSaltLevels', 10)
     logspace = 'logspace' in request.args
-    salt = tc.fs.salt_frame(
+    datasource = request.args.get('datasource', 'hindcast')
+    fs = get_fs(datasource)
+    salt = fs.salt_frame(
         time_step, num_levels=num_levels, logspace=logspace)
     return jsonify(salt)
 
@@ -224,10 +178,7 @@ def main(argv=sys.argv[1:]):
     args = parser.parse_args(argv)
     if args.decimate:
         tc._fs_args['decimate_factor'] = args.decimate
-        del tc.fs
-    if args.cached:
-        tc._fs_args['data_uri'] = thredds_frame_source.CACHE_DATA_URI
-        del tc.fs
+    tc.cached = args.cached
     start(debug=args.debug, host=args.host, port=args.port)
 
 

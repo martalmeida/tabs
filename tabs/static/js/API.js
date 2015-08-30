@@ -22,7 +22,7 @@ API = (function(Config, $) {
 
     function withVelocityGridLocationsJSON(options, callback) {
         if (callback === undefined) console.log('Callback undefined');
-        withJSON(Config.velocityGridLocationsURL, callback);
+        withJSON(urlForVelocityGridLocations(options), callback);
     }
 
     function withSaltFrameJSON(options, callback) {
@@ -45,13 +45,24 @@ API = (function(Config, $) {
     // Private functions
 
     function urlForTimestamps(options) {
-        if (options.dataset === undefined) {
-            console.log('options.dataset undefined');
-            options.dataset = '';
+        if (options.datasource === undefined) {
+            console.log('options.datasource undefined');
+            options.datasource = '';
         }
         url = Config.timestampURL;
         var query = $.query
-            .set('dataset', options.dataset);
+            .set('datasource', options.datasource);
+        return url + query;
+    }
+
+    function urlForVelocityGridLocations(options) {
+        if (options.datasource === undefined) {
+            console.log('options.datasource undefined');
+            options.datasource = '';
+        }
+        url = Config.velocityGridLocationsURL;
+        var query = $.query
+            .set('datasource', options.datasource);
         return url + query;
     }
 
@@ -60,8 +71,14 @@ API = (function(Config, $) {
             console.log('options.frame undefined (default 0)');
             options.frame = 0;
         }
+        if (options.datasource === undefined) {
+            console.log('options.datasource undefined');
+            options.datasource = '';
+        }
         url = Config.velocityFrameURL;
-        return url + options.frame;
+        var query = $.query
+            .set('datasource', options.datasource);
+        return url + options.frame + query;
     }
 
     function urlForSaltFrame(options) {
