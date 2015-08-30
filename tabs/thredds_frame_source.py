@@ -14,16 +14,18 @@ from shapely.geometry import Polygon, MultiPolygon
 
 from octant_lite import rot2d, shrink
 
-# Data File
-TABS_DATA_URI = 'http://barataria.tamu.edu:8080/thredds/dodsC/NcML/txla_nesting6.nc'  # noqa
-CACHE_DATA_URI = os.path.join(os.path.dirname(__file__),
-                              "../static/data/txla_nesting6.nc")
-DEFAULT_DATA_URI = TABS_DATA_URI
+# Data Files
+HINDCAST_DATA_URI = 'http://barataria.tamu.edu:8080/thredds/dodsC/NcML/txla_nesting6.nc'  # noqa
+FORECAST_DATA_URI = 'http://barataria.tamu.edu:8080/thredds/dodsC/oof_latest/roms_his_f_latest.nc'  # noqa
+HINDCAST_CACHE_DATA_URI = os.path.join(os.path.dirname(__file__),
+                                       "../static/data/txla_nesting6.nc")
+FORECAST_CACHE_DATA_URI = os.path.join(os.path.dirname(__file__),
+                                       "../static/data/roms_his_f_latest.nc")
 
 
 class THREDDSFrameSource(object):
 
-    def __init__(self, data_uri=DEFAULT_DATA_URI, decimate_factor=10,
+    def __init__(self, data_uri, decimate_factor=10,
                  grdfile=None):
         self.data_uri = data_uri
         self.decimate_factor = decimate_factor
@@ -189,7 +191,7 @@ def main(NFRAMES=90, output_dir=None):
         output_dir = os.path.join(os.path.dirname(__file__),
                                   '../static/data/json')
     filename = partial(os.path.join, output_dir)
-    frame_source = THREDDSFrameSource(DEFAULT_DATA_URI, decimate_factor=10)
+    frame_source = THREDDSFrameSource(HINDCAST_CACHE_DATA_URI, decimate_factor=10)
     write_vector(frame_source.velocity_grid, filename('grd_locations.json'))
 
     for tidx in range(NFRAMES):
