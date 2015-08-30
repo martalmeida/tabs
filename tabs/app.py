@@ -151,6 +151,7 @@ def static_velocity_frame(time_step):
 def thredds_salt_frame(time_step):
     num_levels = request.args.get('numSaltLevels', 10)
     logspace = 'logspace' in request.args
+    datasource = request.args.get('datasource', 'hindcast')
     fs = get_fs(datasource)
     salt = fs.salt_frame(
         time_step, num_levels=num_levels, logspace=logspace)
