@@ -14,6 +14,9 @@ MapView = (function($, L, Models, Config) {
         // Does the animation automatically start?
         runState: RUN_STOPPED,
 
+        // Use forecast or hindcast data?
+        dataSource: 'hindcast',
+
         // Number of time steps to use
         nFrames: Config.nFrames,
 
@@ -100,7 +103,8 @@ MapView = (function($, L, Models, Config) {
         };
 
         // Load timestamps for all frames
-        API.withFrameTimestamps({}, function(data) {
+        var options = {datasource: self.dataSource};
+        API.withFrameTimestamps(options, function(data) {
             self.timestamps = data.timestamps;
         });
 
@@ -128,6 +132,21 @@ MapView = (function($, L, Models, Config) {
         } else {
             self.start(RUN_SYNC);
         }
+    };
+
+    MapView.prototype.changeDataSource = function changeDataSource() {
+        var self = this;
+        if (self.dataSource !== 'hindcast') {
+            self.dataSource = 'hindcast';
+        } else {
+            self.dataSource = 'forecast';
+        }
+        self.start(RUN_SYNC);
+        self.currentFrame = 0;
+        if (self.visibleLayers.velocity) {
+            self.velocityView && self.velocityView.resetGrid()
+        }
+        self.redraw();
     };
 
     MapView.prototype.queueFrame = function queueFrame(i) {
