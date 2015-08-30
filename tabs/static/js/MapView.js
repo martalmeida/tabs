@@ -171,7 +171,7 @@ MapView = (function($, L, Models, Config) {
         }
         self.start(RUN_SYNC);
         // clear cache
-        Models.velocityFrameSource._velocity_frames = {};
+        self.velocityView.vfs._velocity_frames = {};
         // reload timestamps for all frames
         var options = {datasource: self.dataSource};
         API.withFrameTimestamps(options, function(data) {
