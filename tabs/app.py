@@ -55,7 +55,6 @@ RANDOM_STATE = np.random.get_state()
 
 
 tc = ThreddsConnection(app, random_state=RANDOM_STATE,
-                       data_uri=thredds_frame_source.DEFAULT_DATA_URI,
                        decimate_factor=DECIMATE_FACTOR)
 
 
@@ -68,6 +67,16 @@ def jsonify_dict_of_array(obj):
         if isinstance(obj[k], (np.ndarray, list)):
             obj[k] = np.asarray(obj[k]).round(4).tolist()
     return jsonify(obj)
+
+
+def get_fs(datasource):
+    """ Return the right frame source from the THREDDS connection. """
+    if datasource == 'hindcast':
+        return tc.hindcast_fs
+    elif datasource == 'forecast':
+        return tc.forecast_fs
+    else:
+        raise ValueError('Unknown data source {0}'.format(datasource))
 
 
 @app.route('/')
@@ -89,7 +98,9 @@ def domain():
 @app.route('/data/thredds/timestamps')
 def thredds_timestamps():
     """ Return the timestamps for the available frames. """
-    return jsonify({'timestamps': tc.fs.epochSeconds.tolist()})
+    datasource = request.args.get('datasource', 'hindcast')
+    fs = get_fs(datasource)
+    return jsonify({'timestamps': fs.epochSeconds.tolist()})
 
 
 # Retrieve the grid
@@ -97,7 +108,9 @@ def thredds_timestamps():
 @app.route('/data/thredds/velocity/grid')
 def thredds_grid():
     """ Return the grid points for the velocity frames. """
-    return jsonify_dict_of_array(tc.fs.velocity_grid)
+    datasource = request.args.get('datasource', 'hindcast')
+    fs = get_fs(datasource)
+    return jsonify_dict_of_array(fs.velocity_grid)
 
 
 @app.route('/data/prefetched/velocity/grid')
@@ -112,8 +125,11 @@ def static_grid():
 @app.route('/data/thredds/velocity/step/<int:time_step>')
 def thredds_velocity_frame(time_step):
     """ Return the velocity frame corresponding to `time_step`. """
+    datasource = request.args.get('datasource', 'hindcast')
+    app.logger.info(datasource)
+    fs = get_fs(datasource)
     try:
-        vs = tc.fs.velocity_frame(time_step)
+        vs = fs.velocity_frame(time_step)
         return jsonify_dict_of_array(vs)
     except Exception as e:
         msg = 'No velocity available for time step {0:d}.'.format(time_step)
@@ -135,7 +151,8 @@ def static_velocity_frame(time_step):
 def thredds_salt_frame(time_step):
     num_levels = request.args.get('numSaltLevels', 10)
     logspace = 'logspace' in request.args
-    salt = tc.fs.salt_frame(
+    fs = get_fs(datasource)
+    salt = fs.salt_frame(
         time_step, num_levels=num_levels, logspace=logspace)
     return jsonify(salt)
 
@@ -161,10 +178,8 @@ def main(argv=sys.argv[1:]):
     args = parser.parse_args(argv)
     if args.decimate:
         tc._fs_args['decimate_factor'] = args.decimate
-        del tc.fs
     if args.cached:
         tc._fs_args['data_uri'] = thredds_frame_source.CACHE_DATA_URI
-        del tc.fs
     start(debug=args.debug, host=args.host, port=args.port)
 
 
