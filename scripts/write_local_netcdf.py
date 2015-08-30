@@ -92,7 +92,6 @@ def write_local_cache(url, n_time_steps=90):
     shutil.move(tmp_nam, local_filename)
 
 if __name__ == '__main__':
-    url = 'http://barataria.tamu.edu:8080/thredds/dodsC/NcML/txla_nesting6.nc'
     for url, n in zip([HINDCAST_DATA_URI, FORECAST_DATA_URI], (90, 30)):
         tic = time.time()
         write_local_cache(url, n)
