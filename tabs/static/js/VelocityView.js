@@ -68,19 +68,22 @@ var VelocityView = (function($, L, Models, Config) {
             // color: self.color,
             // weight: self.weight
         // };
+        self.resetGrid();
+
+        return self;
+    };
+
+
+    VelocityView.prototype.resetGrid = function resetGrid(callback) {
+        var self = this;
 
         // Build the set of vectors to display
-        self.vfs.withVelocityGridLocations({}, function(points) {
+        var options = {datasource: self.mapView.dataSource};
+        self.vfs.withVelocityGridLocations(options, function(points) {
             self.points = points;
             self.updateNumVectorsToDisplay();
 
-            var options = {frame: mapView.currentFrame,
-                           points: points,
-                           mapScale: mapView.mapScale()};
-
         });
-
-        return self;
     };
 
 
@@ -94,7 +97,8 @@ var VelocityView = (function($, L, Models, Config) {
 
         var options = {frame: self.mapView.currentFrame,
                        points: self.points,
-                       mapScale: self.mapView.mapScale()};
+                       mapScale: self.mapView.mapScale(),
+                       datasource: mapView.dataSource};
         self.vfs.withVelocityFrame(options, function(data) {
             // Three lines per arrow
             var lines = data.vectors.slice(0, self.numVectorsToDisplay * 3);
