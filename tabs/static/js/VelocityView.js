@@ -87,6 +87,13 @@ var VelocityView = (function($, L, Models, Config) {
     };
 
 
+    VelocityView.prototype.clearCache = function clearCache(callback) {
+        var self = this;
+
+        self.vfs._velocity_frames = {};
+    };
+
+
     VelocityView.prototype.redraw = function redraw(callback) {
         var self = this;
 

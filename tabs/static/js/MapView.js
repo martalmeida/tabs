@@ -170,8 +170,8 @@ MapView = (function($, L, Models, Config) {
             self.dataSource = 'forecast';
         }
         self.start(RUN_SYNC);
-        // clear cache
-        self.velocityView.vfs._velocity_frames = {};
+        // clear vector cache
+        self.velocityView.clearCache();
         // reload timestamps for all frames
         var options = {datasource: self.dataSource};
         API.withFrameTimestamps(options, function(data) {
