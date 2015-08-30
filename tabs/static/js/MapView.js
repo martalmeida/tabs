@@ -179,7 +179,6 @@ MapView = (function($, L, Models, Config) {
             // reset the number of frames
             self.nFrames = self.timestamps.length;
             self.tabsControl.nFrames = self.nFrames;
-            self.sliderControl = self.sliderControl;
         });
         self.currentFrame = 0;
         if (self.visibleLayers.velocity) {
