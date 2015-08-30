@@ -5,8 +5,7 @@ import numpy as np
 from flask import Flask, jsonify, make_response, redirect, request, url_for
 from flask.ext.compress import Compress
 
-from tabs import thredds_frame_source
-from tabs.thredds_connection import ThreddsConnection
+from tabs.thredds_connection import ThreddsConnection, HINDCAST_CACHE_DATA_URI
 
 
 class ReverseProxied(object):
@@ -179,8 +178,7 @@ def main(argv=sys.argv[1:]):
     args = parser.parse_args(argv)
     if args.decimate:
         tc._fs_args['decimate_factor'] = args.decimate
-    if args.cached:
-        tc._fs_args['data_uri'] = thredds_frame_source.CACHE_DATA_URI
+    tc.cached = args.cached
     start(debug=args.debug, host=args.host, port=args.port)
 
 
