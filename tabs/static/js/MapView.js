@@ -172,11 +172,20 @@ MapView = (function($, L, Models, Config) {
         self.start(RUN_SYNC);
         // clear cache
         Models.velocityFrameSource._velocity_frames = {};
+        // reload timestamps for all frames
+        var options = {datasource: self.dataSource};
+        API.withFrameTimestamps(options, function(data) {
+            self.timestamps = data.timestamps;
+            // reset the number of frames
+            self.nFrames = self.timestamps.length;
+            self.tabsControl.nFrames = self.nFrames;
+            self.sliderControl = self.sliderControl;
+        });
         self.currentFrame = 0;
         if (self.visibleLayers.velocity) {
             self.velocityView && self.velocityView.resetGrid()
+            self.redraw();
         }
-        self.redraw();
     };
 
     MapView.prototype.queueFrame = function queueFrame(i) {
