@@ -79,6 +79,7 @@ MapView = (function($, L, Models, Config) {
                 onclick: function onclick() { self.changeDataSource(); }
             },
             onAdd: function(map) {
+                var self = this;
                 this._map = map;
 
                 var classes = ['tabs-control',
@@ -90,8 +91,8 @@ MapView = (function($, L, Models, Config) {
 
                 L.DomEvent.on(this.container, 'click', function(event) {
                     L.DomEvent.stopPropagation(event);
-                    this.options.onclick(event);
-                    this.updateText(event);
+                    self.options.onclick(event);
+                    self.updateText(event);
                 });
                 return this.container;
             },
