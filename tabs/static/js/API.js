@@ -76,9 +76,10 @@ API = (function(Config, $) {
             options.datasource = '';
         }
         url = Config.velocityFrameURL;
+        var api_frame = options.frame + options.frameOffset;
         var query = $.query
             .set('datasource', options.datasource);
-        return url + options.frame + query;
+        return url + api_frame + query;
     }
 
     function urlForSaltFrame(options) {

@@ -103,6 +103,7 @@ var VelocityView = (function($, L, Models, Config) {
         }
 
         var options = {frame: self.mapView.currentFrame,
+                       frameOffset: self.mapView.frameOffset,
                        points: self.points,
                        mapScale: self.mapView.mapScale(),
                        datasource: mapView.dataSource};

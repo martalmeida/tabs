@@ -20,6 +20,9 @@ MapView = (function($, L, Models, Config) {
         // Number of time steps to use
         nFrames: Config.nFrames,
 
+        // Offset in index to request from API from current frame number
+        frameOffset: 20000,
+
         // Initial zoom level
         minZoom: Config.minZoom,
         defaultZoom: Config.defaultZoom,
@@ -135,7 +138,8 @@ MapView = (function($, L, Models, Config) {
         };
 
         // Load timestamps for all frames
-        var options = {datasource: self.dataSource};
+        var options = {datasource: self.dataSource,
+                       frameOffset: self.framOffset};
         API.withFrameTimestamps(options, function(data) {
             self.timestamps = data.timestamps;
         });
