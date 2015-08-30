@@ -49,7 +49,7 @@ Models.velocityFrameSource = (function($, Trig, Config) {
     VFS_proto.withVelocityGridLocations = function withVelocityGridLocations(
             options, callback) {
         API.withVelocityGridLocationsJSON(options, function(data) {
-        if (callback === undefined) console.log('Callback undefined');
+            if (callback === undefined) console.log('Callback undefined');
             var nPoints = data['lat'].length;
             var points = new Array(nPoints);
             for (var i = 0; i < nPoints; i++) {
@@ -67,10 +67,10 @@ Models.velocityFrameSource = (function($, Trig, Config) {
         var scale = options.mapScale;
         var frame = options.frame;
         var points = options.points;
-        if (this._velocity_frames[scale] === undefined) {
-            this._velocity_frames[scale] = [];
+        if (self._velocity_frames[scale] === undefined) {
+            self._velocity_frames[scale] = [];
         }
-        if (this._velocity_frames[scale][frame] === undefined) {
+        if (self._velocity_frames[scale][frame] === undefined) {
             API.withVelocityFrameJSON(options, function(obj) {
                 var vector_frame = self._getDataSnapshot(points, scale, obj);
                 self._velocity_frames[scale][frame] = vector_frame;
