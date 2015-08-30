@@ -1,27 +1,31 @@
+from functools import partial
 from threading import Timer, RLock
 
 import numpy as np
 
-from tabs.thredds_frame_source import THREDDSFrameSource
+from tabs.thredds_frame_source import (THREDDSFrameSource, FORECAST_DATA_URI,
+                                       HINDCAST_DATA_URI)
 
 
-def fget(self):
+def fget(self, datasource):
     with self._fs_lock:
-        if not self._fs:
+        fs = self._fs.get(datasource)
+        if fs is None:
             self.app.logger.info("Opening new THREDDS connection")
+            if datasource == 'hindcast':
+                data_uri = HINDCAST_DATA_URI
+            elif datasource == 'forecast':
+                data_uri = FORECAST_DATA_URI
+            else:
+                raise ValueError('Unknown data source {0}'.format(datasource))
             # Ensure that we get the same ordering of grid points
             np.random.set_state(self.random_state)
             cls = THREDDSFrameSource
-            self._fs = cls(**self._fs_args)
+            args = self._fs_args.copy()
+            args['data_uri'] = data_uri
+            fs = self._fs[datasource] = cls(**args)
         self._reset_timer()
-        return self._fs
-
-
-def fset(self, value):
-    with self._fs_lock:
-        self._fs = value
-        self._reset_timer()
-        return self._fs
+        return fs
 
 
 def fdel(self):
@@ -46,7 +50,7 @@ class ThreddsConnection(object):
         """
         self.app = app
         self.random_state = random_state
-        self._fs = None
+        self._fs = {}
         self._fs_lock = RLock()
         self._fs_args = fs_args
         self._timer = None
@@ -57,7 +61,7 @@ class ThreddsConnection(object):
         if self._timer:
             self._timer.cancel()
             self._timer = None
-        self._fs = None
+        self._fs = {}
 
     def _reset_timer(self):
         self.app.logger.info("Resetting THREDDS connection timer")
@@ -66,4 +70,7 @@ class ThreddsConnection(object):
         self._timer = Timer(self.timeout, self._forget)
         self._timer.start()
 
-    fs = property(fset=fset, fget=fget, fdel=fdel)
+    hindcast_fs = property(fget=partial(fget, datasource='hindcast'),
+                            fdel=fdel)
+    forecast_fs = property(fget=partial(fget, datasource='forecast'),
+                           fdel=fdel)
