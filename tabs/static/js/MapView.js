@@ -170,6 +170,8 @@ MapView = (function($, L, Models, Config) {
             self.dataSource = 'forecast';
         }
         self.start(RUN_SYNC);
+        // clear cache
+        Models.velocityFrameSource._velocity_frames = {};
         self.currentFrame = 0;
         if (self.visibleLayers.velocity) {
             self.velocityView && self.velocityView.resetGrid()
