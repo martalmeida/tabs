@@ -17,10 +17,12 @@ from octant_lite import rot2d, shrink
 # Data Files
 HINDCAST_DATA_URI = 'http://barataria.tamu.edu:8080/thredds/dodsC/NcML/txla_nesting6.nc'  # noqa
 FORECAST_DATA_URI = 'http://barataria.tamu.edu:8080/thredds/dodsC/oof_latest/roms_his_f_latest.nc'  # noqa
-HINDCAST_CACHE_DATA_URI = os.path.join(os.path.dirname(__file__),
-                                       "../static/data/txla_nesting6.nc")
-FORECAST_CACHE_DATA_URI = os.path.join(os.path.dirname(__file__),
-                                       "../static/data/roms_his_f_latest.nc")
+HERE = os.path.abspath(os.path.dirname(__file__))
+DATA_DIR = os.path.join(os.path.dirname(HERE), 'tabs', 'static', 'data')
+_, filename = os.path.split(HINDCAST_DATA_URI)
+HINDCAST_CACHE_DATA_URI = os.path.join(DATA_DIR, filename)
+_, filename = os.path.split(FORECAST_DATA_URI)
+FORECAST_CACHE_DATA_URI = os.path.join(DATA_DIR, filename)
 
 
 class THREDDSFrameSource(object):
