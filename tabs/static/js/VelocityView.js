@@ -63,11 +63,6 @@ var VelocityView = (function($, L, Models, Config) {
         mapView.layerSelectControl.addToggledOverlay(
             'velocity', self.glOverlay, 'Velocity');
 
-        // Currently ignored. Need to sort out the GLSL for this.
-        // var style = {
-            // color: self.color,
-            // weight: self.weight
-        // };
         self.resetGrid();
 
         return self;
