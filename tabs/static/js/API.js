@@ -25,6 +25,11 @@ API = (function(Config, $) {
         withJSON(urlForVelocityGridLocations(options), callback);
     }
 
+    function withBuoyJSON(options, callback) {
+        withJSON(urlForBuoy(options), callback);
+    }
+
+
     function withSaltFrameJSON(options, callback) {
         withJSON(urlForSaltFrame(options), callback);
     }
@@ -36,6 +41,7 @@ API = (function(Config, $) {
     return {
         withJSON: withJSON,
         withVelocityFrameJSON: withVelocityFrameJSON,
+        withBuoyJSON: withBuoyJSON,
         withVelocityGridLocationsJSON: withVelocityGridLocationsJSON,
         withSaltFrameJSON: withSaltFrameJSON,
         withFrameTimestamps: withFrameTimestamps
@@ -52,6 +58,17 @@ API = (function(Config, $) {
         url = Config.timestampURL;
         var query = $.query
             .set('datasource', options.datasource);
+        return url + query;
+    }
+
+    function urlForBuoys(options) {
+        if (options.timestamp === undefined) {
+            console.log('options.timestamp undefined');
+            options.datasource = '';
+        }
+        url = Config.timestampURL;
+        var query = $.query
+            .set('timestamp', options.timestamp);
         return url + query;
     }
 

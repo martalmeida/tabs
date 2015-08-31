@@ -7,6 +7,7 @@ var Config = {
     saltFrameURL: '/data/thredds/salt/step/',
     domainURL: '/data/prefetched/domain',
     timestampURL: '/data/thredds/timestamps',
+    buoyURL: '/data/thredds/buoys',
     tileLayerURL: 'https://{s}.tiles.mapbox.com/v4/tabs-enthought.j3nibphe/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoidGFicy1lbnRob3VnaHQiLCJhIjoiX0RNTzlmbyJ9.gio9AiDol4CT13yJ2GyRHw',
 
     // Vector style
