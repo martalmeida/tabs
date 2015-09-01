@@ -37,10 +37,15 @@ L.Control.DatetimePickerControl = L.Control.extend({
     onAdd: function (map) {
         this.options.map = map;
 
-        var pickerContainer = L.DomUtil.create('div', 'datetimepicker', this._container);
+        var classes = ['tabs-control',
+                       'datetimepicker',
+                       'leaflet-control'].join(' ');
+        this.container = L.DomUtil.create('div', classes, this._container);
+
+        $container = $(this.container);
 
         // Add the datetime picker
-        $(pickerContainer).append(
+        $container.append(
             '<div>' +
             '  <div id="datetimepicker" class="input-append">' +
             '    <input data-format="MM/dd/yyyy HH:mm:ss PP" type="text"></input>' +
@@ -52,7 +57,7 @@ L.Control.DatetimePickerControl = L.Control.extend({
         );
 
         //Prevent map panning/zooming while using the picker
-        $(pickerContainer).mousedown(function () {
+        $container.mousedown(function () {
             map.dragging.disable();
             map.doubleClickZoom.disable();
         });
@@ -61,7 +66,7 @@ L.Control.DatetimePickerControl = L.Control.extend({
             map.doubleClickZoom.enable();
         });
 
-        return pickerContainer;
+        return this.container;
     },
 
     onRemove: function (map) {
