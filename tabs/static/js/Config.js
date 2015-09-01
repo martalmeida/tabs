@@ -1,4 +1,6 @@
-var baseURL = '/tabs/';
+var baseURL = '/';
+// var baseURL = '/tabs/';
+
 
 var Config = {
 
