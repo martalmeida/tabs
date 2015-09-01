@@ -26,7 +26,7 @@ API = (function(Config, $) {
     }
 
     function withBuoyJSON(options, callback) {
-        withJSON(urlForBuoy(options), callback);
+        withJSON(urlForBuoys(options), callback);
     }
 
 
@@ -64,9 +64,10 @@ API = (function(Config, $) {
     function urlForBuoys(options) {
         if (options.timestamp === undefined) {
             console.log('options.timestamp undefined');
-            options.datasource = '';
+            // this should never happen
+            options.timestamp = '2000-01-01T00:00:00';
         }
-        url = Config.timestampURL;
+        url = Config.buoyURL;
         var query = $.query
             .set('timestamp', options.timestamp);
         return url + query;
