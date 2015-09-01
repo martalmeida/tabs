@@ -1,0 +1,86 @@
+L.Control.DatetimePickerControl = L.Control.extend({
+    options: {
+        position: 'topright',
+        layers: null,
+        language: 'en',
+    },
+
+    value: function(value) {
+        if (value !== undefined) {
+            this.picker.setUTCDate(new Date(value));
+        }
+        return this.packer.getTime();
+    },
+
+    initialize: function (options) {
+        L.Util.setOptions(this, options);
+        this._layer = this.options.layer;
+
+    },
+
+    setPosition: function (position) {
+        var map = this._map;
+
+        if (map) {
+            map.removeControl(this);
+        }
+
+        this.options.position = position;
+
+        if (map) {
+            map.addControl(this);
+        }
+        this.startPicker();
+        return this;
+    },
+
+    onAdd: function (map) {
+        this.options.map = map;
+
+        var pickerContainer = L.DomUtil.create('div', 'datetimepicker', this._container);
+
+        // Add the datetime picker
+        $(pickerContainer).append(
+            '<div>' +
+            '  <div id="datetimepicker" class="input-append">' +
+            '    <input data-format="MM/dd/yyyy HH:mm:ss PP" type="text"></input>' +
+            '    <span class="add-on">' +
+            '      <i data-time-icon="icon-time" data-date-icon="icon-calendar"></i>' +
+            '    </span>' +
+            '  </div>' +
+            '</div>'
+        );
+
+        //Prevent map panning/zooming while using the picker
+        $(pickerContainer).mousedown(function () {
+            map.dragging.disable();
+            map.doubleClickZoom.disable();
+        });
+        $(document).mouseup(function () {
+            map.dragging.enable();
+            map.doubleClickZoom.enable();
+        });
+
+        return pickerContainer;
+    },
+
+    onRemove: function (map) {
+        // Remove the picker div
+        $('#leaflet-datetimepicker').remove();
+    },
+
+    picker: null,
+
+    startPicker: function () {
+        var _options = this.options;
+        var picker = $('#datetimepicker').datetimepicker(_options);
+        picker.on('changeDate', this.options.onChangeDate);
+        this.picker = picker.data('datetimepicker');
+        this.picker.setDate(new Date());
+    }
+});
+
+L.control.datetimePickerControl = function (options) {
+    return new L.Control.DatetimePickerControl(options);
+};
+

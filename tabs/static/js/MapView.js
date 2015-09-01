@@ -102,8 +102,16 @@ MapView = (function($, L, Models, Config) {
             }
 
         });
-        self.dataSourceButton = new L.Control.Toggle;
+        self.dataSourceButton = new L.Control.Toggle();
         self.dataSourceButton.addTo(self.map);
+
+        self.pickerControl = L.control.datetimePickerControl({
+            onChangeDate: function(e) {
+                self.startDate = e.localDate;
+            }
+        });
+        self.map.addControl(self.pickerControl);
+        self.pickerControl.startPicker();
 
         self.sliderControl = L.control.sliderControl({
             minValue: 0,
