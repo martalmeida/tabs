@@ -29,7 +29,6 @@ API = (function(Config, $) {
         withJSON(urlForBuoys(options), callback);
     }
 
-
     function withSaltFrameJSON(options, callback) {
         withJSON(urlForSaltFrame(options), callback);
     }

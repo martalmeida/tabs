@@ -109,11 +109,11 @@ var VelocityView = (function($, L, Models, Config) {
             var options = {frame: self.mapView.currentFrame,
                            timestamp: data.date,
                            mapScale: self.mapView.mapScale()};
-            self.vfs.withBuoyFrame(options, function(data) {
+            self.vfs.withBuoyFrame(options, function(buoyData) {
                 var nLines = lines.length;
                 var colors = {};
-                if (data.vectors.length > 0) {
-                    lines.push.apply(lines, data.vectors);
+                if (buoyData.vectors.length > 0) {
+                    lines.push.apply(lines, buoyData.vectors);
                     for (i = nLines + 1; i <= lines.length; i++) {
                         colors[i] = 1;
                     }
