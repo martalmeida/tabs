@@ -107,7 +107,7 @@ MapView = (function($, L, Models, Config) {
 
         self.pickerControl = L.control.datetimePickerControl({
             onChangeDate: function(e) {
-                self.startDate = e.localDate;
+                self.startDate = e.date.getTime();
             }
         });
         self.map.addControl(self.pickerControl);
