@@ -85,7 +85,7 @@ def index():
 
 # An outline of the region interest
 
-@app.route('/prefetched/domain')
+@app.route('prefetched/domain')
 def domain():
     """ Return the domain outline """
     filename = 'data/json/domain.json'
@@ -94,7 +94,7 @@ def domain():
 
 # Retrieve timestamps
 
-@app.route('/thredds/timestamps')
+@app.route('thredds/timestamps')
 def thredds_timestamps():
     """ Return the timestamps for the available frames. """
     datasource = request.args.get('datasource', 'hindcast')
@@ -104,7 +104,7 @@ def thredds_timestamps():
 
 # Retrieve the grid
 
-@app.route('/thredds/velocity/grid')
+@app.route('thredds/velocity/grid')
 def thredds_grid():
     """ Return the grid points for the velocity frames. """
     datasource = request.args.get('datasource', 'hindcast')
@@ -112,7 +112,7 @@ def thredds_grid():
     return jsonify_dict_of_array(fs.velocity_grid)
 
 
-@app.route('/prefetched/velocity/grid')
+@app.route('prefetched/velocity/grid')
 def static_grid():
     """ Return the grid points for the velocity frames. """
     filename = 'data/json/grd_locations.json'
@@ -121,7 +121,7 @@ def static_grid():
 
 # Retrieve velocity frames
 
-@app.route('/thredds/velocity/step/<int:time_step>')
+@app.route('thredds/velocity/step/<int:time_step>')
 def thredds_velocity_frame(time_step):
     """ Return the velocity frame corresponding to `time_step`. """
     datasource = request.args.get('datasource', 'hindcast')
@@ -137,7 +137,7 @@ def thredds_velocity_frame(time_step):
         return make_response(msg, 404)
 
 
-@app.route('/prefetched/velocity/step/<int:time_step>')
+@app.route('prefetched/velocity/step/<int:time_step>')
 def static_velocity_frame(time_step):
     """ Return the velocity frame corresponding to `time_step`. """
     filename = 'data/json/step{}.json'.format(time_step)
@@ -146,7 +146,7 @@ def static_velocity_frame(time_step):
 
 # Retrieve salinity contours
 
-@app.route('/thredds/salt/step/<int:time_step>')
+@app.route('thredds/salt/step/<int:time_step>')
 def thredds_salt_frame(time_step):
     num_levels = request.args.get('numSaltLevels', 10)
     logspace = 'logspace' in request.args
