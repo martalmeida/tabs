@@ -352,9 +352,9 @@ MapView = (function($, L, Models, Config) {
     function renderDate(d) {
         var day_month_year = [d.getUTCDate().padLeft(),
                               Config.monthStrings[d.getUTCMonth()],
-                              d.getFullYear()].join(' '),
-            hour_min = [d.getHours().padLeft(),
-                        d.getMinutes().padLeft()].join(':');
+                              d.getUTCFullYear()].join(' '),
+            hour_min = [d.getUTCHours().padLeft(),
+                        d.getUTCMinutes().padLeft()].join(':');
         return day_month_year + ' ' + hour_min + ' UTC';
     }
 

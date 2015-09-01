@@ -87,9 +87,9 @@ var TABSControl = (function(Config) {
         _renderDate: function renderDate(d) {
             var day_month_year = [d.getUTCDate().padLeft(),
                                   Config.monthStrings[d.getUTCMonth()],
-                                  d.getFullYear()].join(' ');
-            var hour_min = [d.getHours().padLeft(),
-                            d.getMinutes().padLeft()].join(':');
+                                  d.getUTCFullYear()].join(' ');
+            var hour_min = [d.getUTCHours().padLeft(),
+                            d.getUTCMinutes().padLeft()].join(':');
             return day_month_year + '<br/>' + hour_min + ' UTC';
         }
     });
