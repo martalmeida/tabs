@@ -104,10 +104,22 @@ var VelocityView = (function($, L, Models, Config) {
         self.vfs.withVelocityFrame(options, function(data) {
             // Three lines per arrow
             var lines = data.vectors.slice(0, self.numVectorsToDisplay * 3);
-
-            // XXX: We could be passing colors here now
-            self.glOverlay.setLines(lines, {41: 2, 32: 7, 305: 4});
-            callback && callback(data);
+            console.log(data);
+            var options = {frame: self.mapView.currentFrame,
+                           timestamp: data.date,
+                           mapScale: self.mapView.mapScale()};
+            self.vfs.withBuoyFrame(options, function(data) {
+                var nLines = lines.length;
+                var colors = {};
+                if (data.vectors.length > 0) {
+                    lines.push.apply(lines, data.vectors);
+                    for (i = nLines + 1; i <= lines.length; i++) {
+                        colors[i] = 1;
+                    }
+                }
+                self.glOverlay.setLines(lines, colors);
+                callback && callback(data);
+            });
         });
     };
 
