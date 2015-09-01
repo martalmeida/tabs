@@ -1,8 +1,8 @@
+var baseURL = '/tabs/';
 
 var Config = {
 
     // API
-    baseURL: '/tabs/',
     velocityGridLocationsURL: baseURL + 'thredds/velocity/grid',
     velocityFrameURL: baseURL + 'thredds/velocity/step/',
     saltFrameURL: baseURL + 'thredds/salt/step/',
