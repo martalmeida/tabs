@@ -81,6 +81,25 @@ Models.velocityFrameSource = (function($, Trig, Config) {
         }
     };
 
+    VFS_proto.withBuoyFrame = function withBuoyFrame(
+            options, callback) {
+        if (callback === undefined) console.log('Callback undefined');
+        var self = this;
+        var scale = options.mapScale;
+        var frame = options.frame;
+        var buoyLocations = Config.buoyLocations;
+        API.withBuoyJSON(options, function(data) {
+            var points = [];
+            var vectors = {'u': [], 'v': []};
+            for (var key in data) {
+                points.push([buoyLocations[key].lat, buoyLocations[key].lon]);
+                vectors.u.push(data[key][0]);
+                vectors.v.push(data[key][1]);
+            }
+            var buoyFrame = self._getDataSnapshot(points, scale, vectors);
+            callback && callback(buoyFrame);
+        });
+    };
 
     return function velocityFrameSource(config) {
         return new VelocityFrameSource(config);
