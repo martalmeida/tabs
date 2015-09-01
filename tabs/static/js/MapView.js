@@ -105,7 +105,7 @@ MapView = (function($, L, Models, Config) {
             }
 
         });
-        self.dataSourceButton = new L.Control.Toggle;
+        self.dataSourceButton = new L.Control.Toggle();
         self.dataSourceButton.addTo(self.map);
 
         self.sliderControl = L.control.sliderControl({
@@ -139,7 +139,7 @@ MapView = (function($, L, Models, Config) {
 
         // Load timestamps for all frames
         var options = {datasource: self.dataSource,
-                       frameOffset: self.framOffset};
+                       frameOffset: self.frameOffset};
         API.withFrameTimestamps(options, function(data) {
             self.timestamps = data.timestamps;
         });
