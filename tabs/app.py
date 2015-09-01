@@ -6,7 +6,7 @@ from flask import Flask, jsonify, make_response, redirect, request, url_for
 from flask.ext.compress import Compress
 
 from tabs.buoys import get_buoys
-from tabs.thredds_connection import ThreddsConnection, HINDCAST_CACHE_DATA_URI
+from tabs.thredds_connection import ThreddsConnection
 
 
 class ReverseProxied(object):
