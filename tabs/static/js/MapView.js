@@ -138,11 +138,7 @@ MapView = (function($, L, Models, Config) {
         };
 
         // Load timestamps for all frames
-        var options = {datasource: self.dataSource,
-                       frameOffset: self.frameOffset};
-        API.withFrameTimestamps(options, function(data) {
-            self.timestamps = data.timestamps;
-        });
+        self.updateTimeStamps();
 
         // Add visualization layers
         if (Config.enableSalinity) {
@@ -180,6 +176,15 @@ MapView = (function($, L, Models, Config) {
         self.start(RUN_SYNC);
         // clear vector cache
         self.velocityView.clearCache();
+        self.currentFrame = 0;
+        if (self.visibleLayers.velocity) {
+            self.velocityView && self.velocityView.resetGrid();
+            self.redraw();
+        }
+    };
+
+    MapView.prototype.updateTimeStamps = function updateTimeStamps() {
+        var self = this;
         // reload timestamps for all frames
         var options = {datasource: self.datasource};
         API.withFrameTimestamps(options, function(data) {
@@ -188,13 +193,17 @@ MapView = (function($, L, Models, Config) {
             self.nFrames = self.timestamps.length;
             // Choose most recent window
             self.frameOffset = self.timestamps.length - self.nFrames;
-            self.tabsControl.nFrames = self.nFrames;
+            if (self.tabsControl) {
+                var time = self.timestamps[self.currentFrame + self.frameOffset];
+                var ISODate = new Date(time * 1e3).toISOString();
+                console.log(ISODate);
+                self.tabsControl.updateInfo({
+                    frame: self.currentFrame,
+                    nFrames: self.nFrames,
+                    date: ISODate
+                });
+            }
         });
-        self.currentFrame = 0;
-        if (self.visibleLayers.velocity) {
-            self.velocityView && self.velocityView.resetGrid()
-            self.redraw();
-        }
     };
 
     MapView.prototype.queueFrame = function queueFrame(i) {

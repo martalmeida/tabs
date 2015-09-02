@@ -52,6 +52,11 @@ var TABSControl = (function(Config) {
                 if (info.numSaltLevels !== undefined) {
                     this.numSaltLevels = info.numSaltLevels;
                 }
+
+                if (info.nFrames !== undefined) {
+                    this.nFrames = info.nFrames;
+                }
+
                 this._redraw();
             }
         },
