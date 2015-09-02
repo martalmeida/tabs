@@ -15,7 +15,7 @@ MapView = (function($, L, Models, Config) {
         runState: RUN_STOPPED,
 
         // Use forecast or hindcast data?
-        datasource: 'hindcast',
+        datasource: Config.datasource,
 
         // Number of time steps to use
         nFrames: Config.nFrames,
@@ -110,7 +110,7 @@ MapView = (function($, L, Models, Config) {
 
         self.pickerControl = L.control.datetimePickerControl({
             onChangeDate: function(e) {
-                self.startDate = e.date.getTime();
+                self.setStartDate(e.date.getTime() / 1e3);
             }
         });
         self.map.addControl(self.pickerControl);
@@ -146,7 +146,7 @@ MapView = (function($, L, Models, Config) {
         };
 
         // Load timestamps for all frames
-        self.updateTimeStamps();
+        self.updateTimeStamps({updateStartTime: true});
 
         // Add visualization layers
         if (Config.enableSalinity) {
@@ -163,6 +163,26 @@ MapView = (function($, L, Models, Config) {
             if (oKeyEvent.charCode === 32) { self.toggleRunState(); }
         };
 
+    };
+
+
+    MapView.prototype.setStartDate = function setStartDate(startDate) {
+        var self = this;
+        // startDate is in epoch seconds, not milliseconds
+        var ts = self.timestamps,
+            frameOffset = 0;
+        var lastFrame = ts.length - 1;
+        for (frameOffset = 0; frameOffset <= lastFrame; frameOffset++) {
+            if (ts[frameOffset] > startDate) {
+                break;
+            }
+        }
+        self.frameOffset = Math.max(0, frameOffset - 1);
+        self.currentFrame = 0;
+        // This gets set in milliseconds
+        self.pickerControl.value(ts[self.frameOffset] * 1e3);
+        self.nFrames = Math.min(Config.nFrames, 1 + lastFrame - self.frameOffset);
+        self.redraw();
     };
 
 
@@ -183,8 +203,6 @@ MapView = (function($, L, Models, Config) {
         } else {
             self.datasource = 'forecast';
         }
-        self.currentFrame = 0;
-
         // clear vector cache
         self.velocityView && self.velocityView.clearCache();
         if (self.visibleLayers.velocity) {
@@ -195,24 +213,16 @@ MapView = (function($, L, Models, Config) {
     };
 
 
-    MapView.prototype.updateTimeStamps = function updateTimeStamps() {
+    MapView.prototype.updateTimeStamps = function updateTimeStamps(options) {
         var self = this;
         // reload timestamps for all frames
-        var options = {datasource: self.datasource};
+        options = $.extend(options, {datasource: self.datasource});
         API.withFrameTimestamps(options, function(data) {
             self.timestamps = data.timestamps;
             // Choose most recent window
-            self.frameOffset = self.timestamps.length - self.nFrames;
-            if (self.tabsControl) {
-                var time = self.timestamps[self.currentFrame + self.frameOffset];
-                var ISODate = new Date(time * 1e3).toISOString();
-                console.log(ISODate);
-                self.tabsControl.updateInfo({
-                    frame: self.currentFrame,
-                    nFrames: self.nFrames,
-                    date: ISODate
-                });
-            }
+            var startIdx = Math.max(0, self.timestamps.length - self.nFrames);
+            var startDate = self.timestamps[startIdx];
+            self.setStartDate(startDate);
         });
     };
 
@@ -330,9 +340,14 @@ MapView = (function($, L, Models, Config) {
         if (self.visibleLayers.velocity) {
             self.velocityView && self.velocityView.redraw(
                 function vv_call(data) {
-                    self.tabsControl && self.tabsControl.updateInfo(
-                        {frame: self.currentFrame, date: data.date});
-                        callback && callback(data);
+                    if (self.tabsControl) {
+                        self.tabsControl.updateInfo({
+                            frame: self.currentFrame,
+                            nFrames: self.nFrames,
+                            date: data.date
+                        });
+                    }
+                    callback && callback(data);
                 }
             );
         }

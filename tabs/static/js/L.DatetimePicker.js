@@ -7,9 +7,9 @@ L.Control.DatetimePickerControl = L.Control.extend({
 
     value: function(value) {
         if (value !== undefined) {
-            this.picker.setUTCDate(new Date(value));
+            this.picker.setDate(new Date(value));
         }
-        return this.packer.getTime();
+        return this.picker.getDate().getTime();
     },
 
     initialize: function (options) {

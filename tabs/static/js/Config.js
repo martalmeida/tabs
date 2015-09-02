@@ -34,9 +34,15 @@ var Config = {
     },
 
     // Data Sources
+    datasource: 'forecast',
     enableVelocity: true,
     enableSalinity: false,
 
+    // Which data is shown by default?
+    visibleLayers: {
+        velocity: true,
+        salinity: false
+    },
 
     // Map view config
     minZoom: 7,
@@ -67,12 +73,6 @@ var Config = {
         // If true, the control is only updated after the map has stopped
         // moving, otherwise it's always up-to-date (updated on move).
         updateWhenIdle: false
-    },
-
-    // Which data is shown by default?
-    visibleLayers: {
-        velocity: true,
-        salinity: false
     },
 
     monthStrings: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',

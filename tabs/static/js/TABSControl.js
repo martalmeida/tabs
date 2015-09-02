@@ -54,7 +54,7 @@ var TABSControl = (function(Config) {
                 }
 
                 if (info.nFrames !== undefined) {
-                    this.nFrames = info.nFrames;
+                    this.options.nFrames = info.nFrames;
                 }
 
                 this._redraw();
