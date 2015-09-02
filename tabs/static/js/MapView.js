@@ -15,10 +15,13 @@ MapView = (function($, L, Models, Config) {
         runState: RUN_STOPPED,
 
         // Use forecast or hindcast data?
-        dataSource: 'hindcast',
+        datasource: 'hindcast',
 
         // Number of time steps to use
         nFrames: Config.nFrames,
+
+        // Offset in index to request from API from current frame number
+        frameOffset: 0,
 
         // Initial zoom level
         minZoom: Config.minZoom,
@@ -97,13 +100,13 @@ MapView = (function($, L, Models, Config) {
                 return this.container;
             },
             updateText: function() {
-                console.log('Switch data source to', self.dataSource);
-                self.dataSourceButton.container.innerHTML = self.dataSource;
+                console.log('Switch data source to', self.datasource);
+                self.datasourceButton.container.innerHTML = self.datasource;
             }
 
         });
-        self.dataSourceButton = new L.Control.Toggle();
-        self.dataSourceButton.addTo(self.map);
+        self.datasourceButton = new L.Control.Toggle();
+        self.datasourceButton.addTo(self.map);
 
         self.pickerControl = L.control.datetimePickerControl({
             onChangeDate: function(e) {
@@ -143,10 +146,7 @@ MapView = (function($, L, Models, Config) {
         };
 
         // Load timestamps for all frames
-        var options = {datasource: self.dataSource};
-        API.withFrameTimestamps(options, function(data) {
-            self.timestamps = data.timestamps;
-        });
+        self.updateTimeStamps();
 
         // Add visualization layers
         if (Config.enableSalinity) {
@@ -165,6 +165,7 @@ MapView = (function($, L, Models, Config) {
 
     };
 
+
     MapView.prototype.toggleRunState = function toggleRunState() {
         var self = this;
         if (self.runState !== RUN_FOREVER) {
@@ -174,30 +175,47 @@ MapView = (function($, L, Models, Config) {
         }
     };
 
+
     MapView.prototype.changeDataSource = function changeDataSource() {
         var self = this;
-        if (self.dataSource !== 'hindcast') {
-            self.dataSource = 'hindcast';
+        if (self.datasource !== 'hindcast') {
+            self.datasource = 'hindcast';
         } else {
-            self.dataSource = 'forecast';
+            self.datasource = 'forecast';
         }
-        self.start(RUN_SYNC);
+        self.currentFrame = 0;
+
         // clear vector cache
-        self.velocityView.clearCache();
+        self.velocityView && self.velocityView.clearCache();
+        if (self.visibleLayers.velocity) {
+            self.velocityView && self.velocityView.resetGrid();
+        }
+        self.updateTimeStamps();
+        self.start(RUN_SYNC);
+    };
+
+
+    MapView.prototype.updateTimeStamps = function updateTimeStamps() {
+        var self = this;
         // reload timestamps for all frames
-        var options = {datasource: self.dataSource};
+        var options = {datasource: self.datasource};
         API.withFrameTimestamps(options, function(data) {
             self.timestamps = data.timestamps;
-            // reset the number of frames
-            self.nFrames = self.timestamps.length;
-            self.tabsControl.nFrames = self.nFrames;
+            // Choose most recent window
+            self.frameOffset = self.timestamps.length - self.nFrames;
+            if (self.tabsControl) {
+                var time = self.timestamps[self.currentFrame + self.frameOffset];
+                var ISODate = new Date(time * 1e3).toISOString();
+                console.log(ISODate);
+                self.tabsControl.updateInfo({
+                    frame: self.currentFrame,
+                    nFrames: self.nFrames,
+                    date: ISODate
+                });
+            }
         });
-        self.currentFrame = 0;
-        if (self.visibleLayers.velocity) {
-            self.velocityView && self.velocityView.resetGrid()
-            self.redraw();
-        }
     };
+
 
     MapView.prototype.queueFrame = function queueFrame(i) {
         var self = this;

@@ -63,11 +63,6 @@ var VelocityView = (function($, L, Models, Config) {
         mapView.layerSelectControl.addToggledOverlay(
             'velocity', self.glOverlay, 'Velocity');
 
-        // Currently ignored. Need to sort out the GLSL for this.
-        // var style = {
-            // color: self.color,
-            // weight: self.weight
-        // };
         self.resetGrid();
 
         return self;
@@ -78,7 +73,7 @@ var VelocityView = (function($, L, Models, Config) {
         var self = this;
 
         // Build the set of vectors to display
-        var options = {datasource: self.mapView.dataSource};
+        var options = {datasource: self.mapView.datasource};
         self.vfs.withVelocityGridLocations(options, function(points) {
             self.points = points;
             self.updateNumVectorsToDisplay();
@@ -103,14 +98,29 @@ var VelocityView = (function($, L, Models, Config) {
         }
 
         var options = {frame: self.mapView.currentFrame,
+                       frameOffset: self.mapView.frameOffset,
                        points: self.points,
                        mapScale: self.mapView.mapScale(),
-                       datasource: mapView.dataSource};
+                       datasource: mapView.datasource};
         self.vfs.withVelocityFrame(options, function(data) {
             // Three lines per arrow
             var lines = data.vectors.slice(0, self.numVectorsToDisplay * 3);
-            self.glOverlay.setLines(lines);
-            callback && callback(data);
+            console.log(data);
+            var options = {frame: self.mapView.currentFrame,
+                           timestamp: data.date,
+                           mapScale: self.mapView.mapScale()};
+            self.vfs.withBuoyFrame(options, function(buoyData) {
+                var nLines = lines.length;
+                var colors = {};
+                if (buoyData.vectors.length > 0) {
+                    lines.push.apply(lines, buoyData.vectors);
+                    for (i = nLines + 1; i <= lines.length; i++) {
+                        colors[i] = 1;
+                    }
+                }
+                self.glOverlay.setLines(lines, colors);
+                callback && callback(data);
+            });
         });
     };
 

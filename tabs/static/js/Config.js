@@ -7,6 +7,7 @@ var Config = {
     saltFrameURL: '/data/thredds/salt/step/',
     domainURL: '/data/prefetched/domain',
     timestampURL: '/data/thredds/timestamps',
+    buoyURL: '/data/thredds/buoys',
     tileLayerURL: 'https://{s}.tiles.mapbox.com/v4/tabs-enthought.j3nibphe/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoidGFicy1lbnRob3VnaHQiLCJhIjoiX0RNTzlmbyJ9.gio9AiDol4CT13yJ2GyRHw',
 
     // Vector style
@@ -75,5 +76,17 @@ var Config = {
     },
 
     monthStrings: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+
+    buoyLocations: {
+        'B': {'lat': 28.9823, 'lon': -94.89906},
+        'D': {'lat': 27.9396, 'lon': -96.8429 },
+        'F': {'lat': 28.8425, 'lon': -94.2416 },
+        'J': {'lat': 26.1914, 'lon': -97.0507 },
+        'K': {'lat': 26.2168, 'lon': -96.4998 },
+        'N': {'lat': 27.8903, 'lon': -94.0367 },
+        'R': {'lat': 29.635 , 'lon': -93.6417 },
+        'V': {'lat': 27.8966, 'lon': -93.5973 },
+        'W': {'lat': 28.3507, 'lon': -96.0058 }
+    }
 };

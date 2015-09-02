@@ -56,12 +56,71 @@ L.WebGLVectorLayer = L.Class.extend({
 
     // look up the locations for the inputs to our shaders.
     this._u_matLoc = gl.getUniformLocation(program, "u_matrix");
+    this._u_paletteFactorLoc = gl.getUniformLocation(program, "u_paletteFactor");
     this._vertLoc = gl.getAttribLocation(program, "a_vertex");
+    this._colorLoc = gl.getAttribLocation(program, "a_color");
+
+    // We will make a 1xN texture image, where each pixel is a different color
+    // On the GPU we index into this palette get the color of a line
+
+    // Set the color palette
+    this.palette = new Uint8Array([
+      0   , 0   , 0   , 255 , // 0 Black
+      255 , 0   , 0   , 255 , // 1 Red
+      0   , 255 , 0   , 255 , // 2 Green
+      0   , 0   , 255 , 255 , // 3 Blue
+      255 , 0   , 255 , 255 , // 4 Purple
+      255 , 255 , 0   , 255 , // 5 Orange
+      0   , 255 , 255 , 255 , // 6 Teal
+      255 , 255 , 255 , 255   // 7 White
+    ]);
+    this.paletteSize = this.palette.length / 4;
+
+    gl.uniform1f(this._u_paletteFactorLoc, 1 / this.paletteSize);
+
+    this.paletteTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.paletteTexture);
+
+    // Set the parameters so we can render any size image.
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
+    // Full the texture with our palette
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.paletteSize, 1, 0,
+                  gl.RGBA, gl.UNSIGNED_BYTE, this.palette);
+
 
     // Set the matrix to some that makes 1 unit 1 pixel.
     this._pixelsToWebGLMatrix = new Float32Array(16);
     this._mapMatrix = new Float32Array(16);
-    this.initialized = false;
+  },
+
+  allocateBuffers: function(numElements) {
+    // Two points per element (line)
+    var prevNumPoints = this._numPoints;
+    this._numPoints = numElements * 2;
+    if (this._numPoints <= prevNumPoints) {
+      return;
+    }
+
+    var gl = this._ctx;
+
+    // Two coordinates per point
+    this.vertArray = new Float32Array(this._numPoints * 2);
+    this.vertBuffer = gl.createBuffer();
+    gl.enableVertexAttribArray(this._vertLoc);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertBuffer);
+    gl.vertexAttribPointer(this._vertLoc, 2, gl.FLOAT, false, 0, 0);
+
+    // One value (palette index) per point
+    this.colorArray = new Uint8Array(this._numPoints);
+    this.colorBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
+    gl.enableVertexAttribArray(this._colorLoc);
+    gl.vertexAttribPointer(this._colorLoc, 1, gl.UNSIGNED_BYTE, false, 0, 0);
   },
 
   _createCanvas: function() {
@@ -166,39 +225,48 @@ L.WebGLVectorLayer = L.Class.extend({
       return Math.floor(Math.random() * range);
   },
 
-  initializeBuffers: function(size) {
-    var gl = this._ctx;
-    var canvas = this.getCanvas();
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
-    this.vertArray = new Float32Array(size);
-    this.vertBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertBuffer);
-    gl.enableVertexAttribArray(this._vertLoc);
-    gl.vertexAttribPointer(this._vertLoc, 2, gl.FLOAT, false, 0, 0);
-    gl.uniformMatrix4fv(this._u_matLoc, false, this._pixelsToWebGLMatrix);
-    this.initialized = true;
-  },
-
-  setLines: function(lines) {
-    // Two points per line
-      this._numPoints = lines.length * 2;
-    if (!this.initialized || this._numPoints * 2 > this.vertArray.length) {
-      // Two floats per point
-      this.initializeBuffers(this._numPoints * 2);
-    }
+  setLines: function(lines, colors) {
+    // Expects an array of points and an optional array or object of colors such
+    // that the line from lines[i] has color colors[i].
     // one line is [[x1, y1], [x2, y2]]
-    var idx = 0;
+    // one color is an index into the palette
+    // Example:
+    //   // draws a black line on the x axis and a white line on the y axis
+    //   lines = [[[0, 0], [1, 0]], [[0, 0], [0, 1]]]
+    //   colors = {0: 0, 1: 7}
+    //
+
+    // Get space if needed
+    this.allocateBuffers(lines.length);
+    var vidx = 0;
+    var cidx = 0;
+
+    colors = colors || {};
+
     for (var i = 0; i < lines.length; i++) {
+      var color = colors[i] | 0;
+      // First point in the line
       var pixel = this.latLongToPixelXY(lines[i][0][0], lines[i][0][1]);
-      this.vertArray[idx++] = pixel.x;
-      this.vertArray[idx++] = pixel.y;
+      this.vertArray[vidx++] = pixel.x;
+      this.vertArray[vidx++] = pixel.y;
+      this.colorArray[cidx++] = color;
+
+      // Second point in the line
       pixel = this.latLongToPixelXY(lines[i][1][0], lines[i][1][1]);
-      this.vertArray[idx++] = pixel.x;
-      this.vertArray[idx++] = pixel.y;
+      this.vertArray[vidx++] = pixel.x;
+      this.vertArray[vidx++] = pixel.y;
+      this.colorArray[cidx++] = color;
     }
+
     var gl = this._ctx;
+
+    // Copy vertex data to GPU
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, this.vertArray, gl.STATIC_DRAW);
+
+    // Copy color data to GPU
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.colorArray, gl.STATIC_DRAW);
     this.redraw();
   },
 
@@ -299,13 +367,6 @@ L.WebGLVectorLayer = L.Class.extend({
     this._render();
   },
 
-  /*
-  _project: function(x) {
-    var point = this._map.latLngToLayerPoint(new L.LatLng(x[1], x[0]));
-    return [point.x, point.y];
-  },
-  */
-
   _updateOpacity: function () { },
 
   _render: function() {
@@ -331,18 +392,18 @@ L.WebGLVectorLayer = L.Class.extend({
   onResize: function() {
     var gl = this._ctx,
         canvas = this.getCanvas();
-    this._pixelsToWebGLMatrix.set([2 / canvas.width,  0                , 0, 0,
-                                   0               , -2 / canvas.height, 0, 0,
-                                   0               ,  0                , 0, 0,
-                                  -1               ,  1                , 0, 1]);
-    gl.viewport(0, 0, canvas.width, canvas.height);
+    var w = canvas.clientWidth,
+        h = canvas.clientHeight;
+    this._pixelsToWebGLMatrix.set([2 / w,  0    , 0, 0,
+                                   0    , -2 / h, 0, 0,
+                                   0    ,  0    , 0, 0,
+                                  -1    ,  1    , 0, 1]);
+    gl.viewport(0, 0, w, h);
   },
 
   render: function() {
     var gl = this._ctx;
     if (gl === null) return;
-
-    var canvas = this.getCanvas();
 
     gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -361,7 +422,8 @@ L.WebGLVectorLayer = L.Class.extend({
 
     // -- attach matrix value to 'mapMatrix' uniform in shader
     gl.uniformMatrix4fv(this._u_matLoc, false, this._mapMatrix);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertBuffer);
+
+    // Draw the lines
     gl.drawArrays(gl.LINES, 0, this._numPoints);
 
   }

@@ -5,7 +5,8 @@ import numpy as np
 from flask import Flask, jsonify, make_response, redirect, request, url_for
 from flask.ext.compress import Compress
 
-from tabs.thredds_connection import ThreddsConnection, HINDCAST_CACHE_DATA_URI
+from tabs.buoys import get_buoys
+from tabs.thredds_connection import ThreddsConnection
 
 
 class ReverseProxied(object):
@@ -135,6 +136,24 @@ def thredds_velocity_frame(time_step):
         app.logger.error(msg)
         app.logger.debug(str(e))
         return make_response(msg, 404)
+
+
+@app.route('/data/thredds/buoys')
+def buoy_vectors():
+    """ Return the buoy vectors for a given `timestamp`.
+
+    `timestamp` is a required qury string in ISO 8601 format in UTC,
+    e.g. "2015-08-30T00:00:00".
+
+    Returns u (east), v (north) components of velocity in m/s
+    in a JSON dictionary for available buoys.
+    """
+    time_stamp = request.args.get('timestamp', None)
+    if time_stamp is None:
+        return make_response('time_stamp query required', 500)
+    app.logger.info('Getting buoy data for {}'.format(time_stamp))
+    res = get_buoys(time_stamp)
+    return jsonify(res)
 
 
 @app.route('/data/prefetched/velocity/step/<int:time_step>')
