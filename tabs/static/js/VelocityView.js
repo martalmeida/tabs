@@ -73,7 +73,7 @@ var VelocityView = (function($, L, Models, Config) {
         var self = this;
 
         // Build the set of vectors to display
-        var options = {datasource: self.mapView.dataSource};
+        var options = {datasource: self.mapView.datasource};
         self.vfs.withVelocityGridLocations(options, function(points) {
             self.points = points;
             self.updateNumVectorsToDisplay();
@@ -101,7 +101,7 @@ var VelocityView = (function($, L, Models, Config) {
                        frameOffset: self.mapView.frameOffset,
                        points: self.points,
                        mapScale: self.mapView.mapScale(),
-                       datasource: mapView.dataSource};
+                       datasource: mapView.datasource};
         self.vfs.withVelocityFrame(options, function(data) {
             // Three lines per arrow
             var lines = data.vectors.slice(0, self.numVectorsToDisplay * 3);

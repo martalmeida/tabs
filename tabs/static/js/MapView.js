@@ -15,7 +15,7 @@ MapView = (function($, L, Models, Config) {
         runState: RUN_STOPPED,
 
         // Use forecast or hindcast data?
-        dataSource: 'hindcast',
+        datasource: 'hindcast',
 
         // Number of time steps to use
         nFrames: Config.nFrames,
@@ -100,13 +100,13 @@ MapView = (function($, L, Models, Config) {
                 return this.container;
             },
             updateText: function() {
-                console.log('Switch data source to', self.dataSource);
-                self.dataSourceButton.container.innerHTML = self.dataSource;
+                console.log('Switch data source to', self.datasource);
+                self.datasourceButton.container.innerHTML = self.datasource;
             }
 
         });
-        self.dataSourceButton = new L.Control.Toggle();
-        self.dataSourceButton.addTo(self.map);
+        self.datasourceButton = new L.Control.Toggle();
+        self.datasourceButton.addTo(self.map);
 
         self.sliderControl = L.control.sliderControl({
             minValue: 0,
@@ -172,16 +172,16 @@ MapView = (function($, L, Models, Config) {
 
     MapView.prototype.changeDataSource = function changeDataSource() {
         var self = this;
-        if (self.dataSource !== 'hindcast') {
-            self.dataSource = 'hindcast';
+        if (self.datasource !== 'hindcast') {
+            self.datasource = 'hindcast';
         } else {
-            self.dataSource = 'forecast';
+            self.datasource = 'forecast';
         }
         self.start(RUN_SYNC);
         // clear vector cache
         self.velocityView.clearCache();
         // reload timestamps for all frames
-        var options = {datasource: self.dataSource};
+        var options = {datasource: self.datasource};
         API.withFrameTimestamps(options, function(data) {
             self.timestamps = data.timestamps;
             // Reset the number of frames
