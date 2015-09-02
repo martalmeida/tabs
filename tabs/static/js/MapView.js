@@ -189,8 +189,6 @@ MapView = (function($, L, Models, Config) {
         var options = {datasource: self.datasource};
         API.withFrameTimestamps(options, function(data) {
             self.timestamps = data.timestamps;
-            // Reset the number of frames
-            self.nFrames = self.timestamps.length;
             // Choose most recent window
             self.frameOffset = self.timestamps.length - self.nFrames;
             if (self.tabsControl) {
