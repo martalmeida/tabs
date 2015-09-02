@@ -157,6 +157,7 @@ MapView = (function($, L, Models, Config) {
 
     };
 
+
     MapView.prototype.toggleRunState = function toggleRunState() {
         var self = this;
         if (self.runState !== RUN_FOREVER) {
@@ -166,6 +167,7 @@ MapView = (function($, L, Models, Config) {
         }
     };
 
+
     MapView.prototype.changeDataSource = function changeDataSource() {
         var self = this;
         if (self.datasource !== 'hindcast') {
@@ -173,15 +175,17 @@ MapView = (function($, L, Models, Config) {
         } else {
             self.datasource = 'forecast';
         }
-        self.start(RUN_SYNC);
-        // clear vector cache
-        self.velocityView.clearCache();
         self.currentFrame = 0;
+
+        // clear vector cache
+        self.velocityView && self.velocityView.clearCache();
         if (self.visibleLayers.velocity) {
             self.velocityView && self.velocityView.resetGrid();
-            self.redraw();
         }
+        self.updateTimeStamps();
+        self.start(RUN_SYNC);
     };
+
 
     MapView.prototype.updateTimeStamps = function updateTimeStamps() {
         var self = this;
@@ -203,6 +207,7 @@ MapView = (function($, L, Models, Config) {
             }
         });
     };
+
 
     MapView.prototype.queueFrame = function queueFrame(i) {
         var self = this;
