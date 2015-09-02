@@ -1,4 +1,4 @@
-var baseURL = '/';
+var baseURL = 'http://barataria.tamu.edu/';
 // var baseURL = '/tabs/';
 
 
