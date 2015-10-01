@@ -37,7 +37,7 @@ def fdel(self):
 class ThreddsConnection(object):
 
     def __init__(self, app, random_state, timeout=300.0,
-                 cached=False, **fs_args):
+                 cached=True, **fs_args):
         """ Create an expiring connection to the THREDDS server.
 
         The connection will drop after 5 minutes of non-use. Any subsequent
