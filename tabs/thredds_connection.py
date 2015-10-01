@@ -72,6 +72,7 @@ class ThreddsConnection(object):
                 'forecast':
                     FORECAST_CACHE_DATA_URI if value else FORECAST_DATA_URI,
             }
+            self.app.logger.info('cached =', value)
             self._cached = value
         return locals()
     cached = property(**cached())

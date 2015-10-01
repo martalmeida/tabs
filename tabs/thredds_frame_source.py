@@ -21,7 +21,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 DATA_DIR = os.path.join(os.path.dirname(HERE), 'tabs', 'static', 'data')
 _, filename = os.path.split(HINDCAST_DATA_URI)
 HINDCAST_CACHE_DATA_URI = os.path.join(DATA_DIR, filename)
-FORECAST_DATA_URI = '/atch/raid2/dj/oof_latest/oof/oof/outputs/ncfiles/latest/roms_his_f_latest.nc'  # noqa
+FORECAST_CACHE_DATA_URI = '/atch/raid2/dj/oof_latest/oof/oof/outputs/ncfiles/latest/roms_his_f_latest.nc'  # noqa
 
 
 class THREDDSFrameSource(object):
