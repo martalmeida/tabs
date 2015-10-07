@@ -2,11 +2,11 @@
 var Config = {
 
     // API
-    velocityGridLocationsURL: '/data/thredds/velocity/grid',
-    velocityFrameURL: '/data/thredds/velocity/step/',
-    saltFrameURL: '/data/thredds/salt/step/',
-    domainURL: '/data/prefetched/domain',
-    timestampURL: '/data/thredds/timestamps',
+    velocityGridLocationsURL: '/tabs/data/thredds/velocity/grid',
+    velocityFrameURL: '/tabs/data/thredds/velocity/step/',
+    saltFrameURL: '/tabs/data/thredds/salt/step/',
+    domainURL: '/tabs/data/prefetched/domain',
+    timestampURL: '/tabs/data/thredds/timestamps',
     tileLayerURL: 'https://{s}.tiles.mapbox.com/v4/tabs-enthought.j3nibphe/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoidGFicy1lbnRob3VnaHQiLCJhIjoiX0RNTzlmbyJ9.gio9AiDol4CT13yJ2GyRHw',
 
     // Vector style
