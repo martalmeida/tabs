@@ -15,7 +15,7 @@ MapView = (function($, L, Models, Config) {
         runState: RUN_STOPPED,
 
         // Use forecast or hindcast data?
-        dataSource: 'hindcast',
+        dataSource: 'forecast',
 
         // Number of time steps to use
         nFrames: Config.nFrames,
