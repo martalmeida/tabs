@@ -15,7 +15,7 @@ from shapely.geometry import Polygon, MultiPolygon
 from octant_lite import rot2d, shrink
 
 # Data Files
-HINDCAST_DATA_URI = 'http://barataria.tamu.edu:8080/thredds/dodsC/NcML/txla_nesting6.nc'  # noqa
+HINDCAST_DATA_URI = 'http://barataria.tamu.edu:8080/thredds/dodsC/txla_nesting6/ocean_his_0243.nc'  # noqa
 FORECAST_DATA_URI = 'http://barataria.tamu.edu:8080/thredds/dodsC/oof_latest/roms_his_f_latest.nc'  # noqa
 HERE = os.path.abspath(os.path.dirname(__file__))
 DATA_DIR = os.path.join(os.path.dirname(HERE), 'tabs', 'static', 'data')
