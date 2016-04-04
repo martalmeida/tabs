@@ -19,7 +19,6 @@ API = (function(Config, $) {
         withJSON(urlForVelocityFrame(options), callback);
     }
 
-
     function withVelocityGridLocationsJSON(options, callback) {
         if (callback === undefined) console.log('Callback undefined');
         withJSON(urlForVelocityGridLocations(options), callback);
@@ -89,6 +88,7 @@ API = (function(Config, $) {
         var url = Config.saltFrameURL;
         var query = $.query
             .set('numSaltLevels', options.numSaltLevels)
+			.set('datasource', options.datasource)
             .set('logspace', options.logspaceSaltLevels);
         return url + options.frame + query;
     }

@@ -54,10 +54,18 @@ MapView = (function($, L, Models, Config) {
             minZoom: self.minZoom
         });
 
-        // Leaflet map object
+		//Added by Alx
+		var buoy1 = L.marker([25.61, -96.02]).bindPopup('Buoy 1'),
+			buoy2 = L.marker([28.74, -92.99]).bindPopup('Buoy 2'),
+			buoy3 = L.marker([28.73, -89.8]).bindPopup('Buoy 3'),
+			buoy4 = L.marker([27.77, -94.23]).bindPopup('Buoy 4');
+		//Added by Alx	
+		var buoys = L.layerGroup([buoy1, buoy2, buoy3, buoy4]);
+        
+		// Leaflet map object
         self.map = L.map('map', {center: self.mapCenter,
                                  zoom: self.defaultZoom,
-                                 layers: [mapboxTiles]});
+                                 layers: [mapboxTiles, buoys]});
 
         // Re-render when map conditions change
         self.map.on('viewreset', function() {
@@ -98,7 +106,7 @@ MapView = (function($, L, Models, Config) {
             },
             updateText: function() {
                 console.log('Switch data source to', self.dataSource);
-                self.dataSourceButton.container.innerHTML = self.dataSource;
+                self.dataSourceButton.container.innerHTML = '<img src="js/external/leaflet/images/databases.png" alt="Source"/> '+self.dataSource;
             }
 
         });
@@ -123,9 +131,12 @@ MapView = (function($, L, Models, Config) {
         self.distanceScaleControl = L.control.scale(
             Config.distanceScaleOptions).addTo(self.map);
 
+		//Added by Alx
+		var overlayMaps = {
+			"Buoys": buoys
+		};
         // Add layer selector and hook up toggling of visibility flag
-        var lsc = self.layerSelectControl = L.control.layers([], [],
-            {position: 'topleft'}).addTo(self.map);
+        var lsc = self.layerSelectControl = L.control.layers(overlayMaps, [],{position: 'topleft'}).addTo(self.map);
         lsc.addToggledOverlay = function addToggledOverlay(key, layer, name) {
             lsc.addOverlay(layer, name);
             self.map.on(
@@ -173,6 +184,7 @@ MapView = (function($, L, Models, Config) {
         } else {
             self.dataSource = 'forecast';
         }
+        self.queueFrame(0);
         self.start(RUN_SYNC);
         // clear vector cache
         self.velocityView.clearCache();
@@ -319,8 +331,13 @@ MapView = (function($, L, Models, Config) {
                          numSaltLevels: self.saltView.numSaltLevels});
                         callback && callback(data);
                 }
+				
             );
+			$('#salinity_legend').show();
         }
+		else {
+			$('#salinity_legend').hide();
+		}
     };
 
 
@@ -334,6 +351,7 @@ MapView = (function($, L, Models, Config) {
     function _setLayerVisibility(mapView, key, layer, value) {
         function setLayerVisibilityInner(e) {
             if (e.layer === layer) {
+				
                 mapView.visibleLayers[key] = value;
                 mapView.redraw();
             }

@@ -5,7 +5,8 @@ import numpy as np
 from flask import Flask, jsonify, make_response, redirect, request, url_for
 from flask.ext.compress import Compress
 
-from tabs.thredds_connection import ThreddsConnection, HINDCAST_CACHE_DATA_URI
+#from tabs.thredds_connection import ThreddsConnection, HINDCAST_CACHE_DATA_URI
+from thredds_connection import ThreddsConnection, HINDCAST_CACHE_DATA_URI
 
 
 class ReverseProxied(object):
@@ -90,6 +91,16 @@ def domain():
     """ Return the domain outline """
     filename = 'data/json/domain.json'
     return redirect(url_for('static', filename=filename))
+
+# Retrieve bathy contours:
+
+@app.route('/data/thredds/bathy')
+def thredds_bathy():
+    """ Return the bathy contours. """
+    datasource = request.args.get('datasource', 'hindcast')
+    fs = get_fs(datasource)
+    bathy = fs.bathy
+    return jsonify(bathy)
 
 
 # Retrieve timestamps

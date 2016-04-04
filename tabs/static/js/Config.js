@@ -18,23 +18,23 @@ var Config = {
 
     // Contour style
     contourOptions: {
-        numSaltLevels: 10,
+        numSaltLevels: 12,
         logspaceSaltLevels: false,
 
         // Parameters defined here override the data
         // Contour outline color (Undefined matches the fill color)
         // color: 'black',
         // Contour outline weight
-        weight: 0.5,
+        weight: 1,
         // Contour outline opacity
         opacity: 1,
         // Contour fill opacity
-        fillOpacity: 0.5
+        fillOpacity: 1
     },
 
     // Data Sources
     enableVelocity: true,
-    enableSalinity: false,
+    enableSalinity: true,
 
 
     // Map view config
@@ -71,7 +71,7 @@ var Config = {
     // Which data is shown by default?
     visibleLayers: {
         velocity: true,
-        salinity: false
+        salinity: true
     },
 
     monthStrings: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',

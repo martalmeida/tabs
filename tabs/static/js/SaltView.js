@@ -51,7 +51,7 @@ var SaltView = (function($, L, Models, Config) {
             return self;
         }
 
-        var config = $.extend({frame: self.mapView.currentFrame},
+        var config = $.extend({frame: self.mapView.currentFrame, datasource: self.mapView.dataSource},
                               self.contourOptions);
         self.sfs.withSaltFrame(config, function(data) {
             drawContours(data, self.saltGroup,
