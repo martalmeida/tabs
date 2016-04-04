@@ -1,6 +1,7 @@
 import argparse
 import sys
 
+
 import numpy as np
 from flask import Flask, jsonify, make_response, redirect, request, url_for
 from flask.ext.compress import Compress
