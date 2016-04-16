@@ -23,6 +23,11 @@ API = (function(Config, $) {
         if (callback === undefined) console.log('Callback undefined');
         withJSON(urlForVelocityGridLocations(options), callback);
     }
+	
+	function withRadarGridLocationsJSON(options, callback) {
+        if (callback === undefined) console.log('Callback undefined');
+        withJSON(urlForRadarGridLocations(options), callback);
+    }
 
     function withSaltFrameJSON(options, callback) {
         withJSON(urlForSaltFrame(options), callback);
@@ -37,7 +42,8 @@ API = (function(Config, $) {
         withVelocityFrameJSON: withVelocityFrameJSON,
         withVelocityGridLocationsJSON: withVelocityGridLocationsJSON,
         withSaltFrameJSON: withSaltFrameJSON,
-        withFrameTimestamps: withFrameTimestamps
+        withFrameTimestamps: withFrameTimestamps,
+		withRadarGridLocationsJSON: withRadarGridLocationsJSON,
     };
 
 
@@ -91,6 +97,17 @@ API = (function(Config, $) {
 			.set('datasource', options.datasource)
             .set('logspace', options.logspaceSaltLevels);
         return url + options.frame + query;
+    }
+	
+	function urlForRadarGridLocations(options) {
+        if (options.datasource === undefined) {
+            console.log('options.datasource undefined');
+            options.datasource = '';
+        }
+        url = Config.radarGridLocationsURL;
+        var query = $.query
+            .set('datasource', options.datasource);
+        return url + query;
     }
 
 }(Config, jQuery));

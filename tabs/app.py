@@ -131,6 +131,30 @@ def static_grid():
     return redirect(url_for('static', filename=filename))
 
 
+# radar frame:
+@app.route('/data/thredds/radar/step/<int:time_step>')
+def thredds_radar_frame(time_step):
+    """ Return the radar frame close to date"""
+    datasource = request.args.get('datasource', 'hindcast')
+    app.logger.info(datasource)
+    fs = get_fs(datasource)
+    try:
+        vs = fs.radar_frame(time_step)
+        return jsonify_dict_of_array(vs)
+    except Exception as e:
+        msg = 'cannot extrat radar data (for time step %d).'%time_step
+        app.logger.error(msg)
+        app.logger.debug(str(e))
+        return make_response(msg, 404)
+
+
+@app.route('/data/prefetched/radar/step/<int:time_step>')
+def static_radar_frame(time_step):
+     """ Return the radar frame corresponding to `time_step`. """
+     filename = 'data/json/step{}.json'.format(time_step)
+     return redirect(url_for('static', filename=filename))
+
+
 # Retrieve velocity frames
 
 @app.route('/data/thredds/velocity/step/<int:time_step>')

@@ -158,6 +158,9 @@ MapView = (function($, L, Models, Config) {
         if (Config.enableVelocity) {
             self.velocityView = VelocityView.velocityView(config).addTo(self);
         }
+		if (Config.enableRadar) {
+            self.radarView = RadarView.radarView(config).addTo(self);
+        }
 
         self.redraw();
 
@@ -338,6 +341,12 @@ MapView = (function($, L, Models, Config) {
 		else {
 			$('#salinity_legend').hide();
 		}
+		
+		if (self.visibleLayers.radar) {
+            self.radarView && self.radarView.redraw(
+                //To be constructed
+            );
+        }
     };
 
 

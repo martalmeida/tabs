@@ -24,6 +24,7 @@ GRD='txla_grd_v4_new.nc4'
 #FORECAST_DATA_URI = 'http://barataria.tamu.edu:8080/thredds/dodsC/txla_oof_latest/txla_forecast_20140905.nc'
 HINDCAST_DATA_URI = 'txla_forecast_20140419_surface.nc'
 FORECAST_DATA_URI = 'txla_forecast_20140905_surface.nc'
+RADAR_DATA_URI    = 'radar.nc'
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 DATA_DIR = os.path.join(os.path.dirname(HERE), 'tabs', 'static', 'data')
@@ -55,11 +56,13 @@ class THREDDSFrameSource(object):
 
         print 'loading grid v...'
         self._configure_velocity_grid()
-        print 'done 1!'
         print 'loading grid salt...'
         self._configure_salt_grid()
-        print 'done !'
+        print 'loading bathy contours...'
         self.bathy=self.bathy_contours()
+        print 'loading grid radar...'
+        self._configure_radar_grid()
+        print 'done !'
 
     def _configure_velocity_grid(self):
 
@@ -99,6 +102,62 @@ class THREDDSFrameSource(object):
         # # We don't need to decimate or shuffle this because we're going to be
         # # shipping out derived contour lines
         # self.salt_idx, self.salt_idy = mask.nonzero()
+
+    def _configure_radar_grid(self):
+      self.nc_radar=netCDF.Dataset(RADAR_DATA_URI)
+      lon=self.nc_radar.variables['lon'][:]
+      lat=self.nc_radar.variables['lat'][:]
+      try:
+        mask=self.nc_radar.variables['mask'][:]
+      except: mask=np.zeros(x.shape,'bool')
+
+      idx, idy = np.where(mask == 1.0)
+      idv = np.arange(len(idx))
+      np.random.shuffle(idv)
+
+      Nvec = len(idx) / self.decimate_factor
+      idv = idv[:Nvec]
+      self.radar_idx = idx[idv]
+      self.radar_idy = idy[idv]
+
+      # save the radar locations as JSON file
+      self.radar_grid = {
+            'lon': lon[self.radar_idx, self.radar_idy],
+            'lat': lat[self.radar_idx, self.radar_idy]}
+
+
+    def radar_frame(self,tind):
+      from dateutil import parser
+      from netcdftime import utime
+      import datetime
+
+      DtMax=datetime.timedelta(days=1)
+
+      # load radar times:
+      tnum=self.nc_radar.variables['time'][:]
+      tunits=self.nc_radar.variables['time'].units
+      time=utime(tunits,calendar='standard').num2date(tnum)
+
+      # current model date:
+      date=self.dates[tind]
+
+      # find nearest time in radar:
+      d=np.abs(time-date)
+      i=np.where(d==d.min())[0][0]
+
+      # let the max diff be 1 day:
+      if time[i]>date: dt=time[i]-date
+      else: dt=date-time[i]
+      if dt>DtMax: return {}
+
+      u=self.nc_radar.variables['u'][i]
+      v=self.nc_radar.variables['v'][i]
+
+      vector = {'date': time[i].isoformat(),
+                  'u': u[self.radar_idx, self.radar_idy],
+                  'v': v[self.radar_idx, self.radar_idy]}
+      print 'loading radar vel done'
+      return vector
 
     def velocity_frame(self, frame_number):
         if self.isForec: frame_number=-1-frame_number
