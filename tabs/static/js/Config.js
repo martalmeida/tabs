@@ -5,7 +5,8 @@ var Config = {
     velocityGridLocationsURL: '/data/thredds/velocity/grid',
     velocityFrameURL: '/data/thredds/velocity/step/',
     saltFrameURL: '/data/thredds/salt/step/',
-	radarFrameURL: '',
+	radarGridLocationsURL : '/data/thredds/radar/grid',
+	radarFrameURL: '/data/thredds/radar/step/',
     domainURL: '/data/prefetched/domain',
     timestampURL: '/data/thredds/timestamps',
     tileLayerURL: 'https://{s}.tiles.mapbox.com/v4/tabs-enthought.j3nibphe/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoidGFicy1lbnRob3VnaHQiLCJhIjoiX0RNTzlmbyJ9.gio9AiDol4CT13yJ2GyRHw',
@@ -74,7 +75,7 @@ var Config = {
     visibleLayers: {
         velocity: true,
         salinity: true,
-		radar: false
+		radar: true
     },
 
     monthStrings: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',

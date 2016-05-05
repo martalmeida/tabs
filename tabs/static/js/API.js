@@ -17,11 +17,17 @@ API = (function(Config, $) {
     function withVelocityFrameJSON(options, callback) {
         if (callback === undefined) console.log('Callback undefined');
         withJSON(urlForVelocityFrame(options), callback);
+		callback = callback;
     }
 
     function withVelocityGridLocationsJSON(options, callback) {
         if (callback === undefined) console.log('Callback undefined');
         withJSON(urlForVelocityGridLocations(options), callback);
+    }
+	
+	function withRadarFrameJSON(options, callback) {
+        if (callback === undefined) console.log('Callback undefined');
+        withJSON(urlForRadarFrame(options), callback);
     }
 	
 	function withRadarGridLocationsJSON(options, callback) {
@@ -43,7 +49,8 @@ API = (function(Config, $) {
         withVelocityGridLocationsJSON: withVelocityGridLocationsJSON,
         withSaltFrameJSON: withSaltFrameJSON,
         withFrameTimestamps: withFrameTimestamps,
-		withRadarGridLocationsJSON: withRadarGridLocationsJSON,
+		withRadarFrameJSON: withRadarFrameJSON,
+		withRadarGridLocationsJSON: withRadarGridLocationsJSON
     };
 
 
@@ -108,6 +115,21 @@ API = (function(Config, $) {
         var query = $.query
             .set('datasource', options.datasource);
         return url + query;
+    }
+	
+	function urlForRadarFrame(options) {
+        if (options.frame === undefined) {
+            console.log('options.frame undefined (default 0)');
+            options.frame = 0;
+        }
+        if (options.datasource === undefined) {
+            console.log('options.datasource undefined');
+            options.datasource = '';
+        }
+        url = Config.radarFrameURL;
+        var query = $.query
+            .set('datasource', options.datasource);
+        return url + options.frame + query;
     }
 
 }(Config, jQuery));

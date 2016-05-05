@@ -54,15 +54,16 @@ class THREDDSFrameSource(object):
         if self.isForec: self.epochSeconds = self.epochSeconds[-100:][::-1]
         self.dates = netCDF.num2date(self.epochSeconds, 'seconds since 1970-01-01')
 
-        print 'loading grid v...'
+        print 'loading velocity grid ...'
         self._configure_velocity_grid()
-        print 'loading grid salt...'
+        print 'loading salt grid ...'
         self._configure_salt_grid()
         print 'loading bathy contours...'
-        self.bathy=self.bathy_contours()
-        print 'loading grid radar...'
+        self.bathy=self.bathy_contours()		
+        print 'loading radar grid ...'
         self._configure_radar_grid()
-        print 'done !'
+		
+        print 'all grids done !!'
 
     def _configure_velocity_grid(self):
 
@@ -101,63 +102,43 @@ class THREDDSFrameSource(object):
 
         # # We don't need to decimate or shuffle this because we're going to be
         # # shipping out derived contour lines
-        # self.salt_idx, self.salt_idy = mask.nonzero()
-
+        # self.salt_idx, self.salt_idy = mask.nonzero()	
     def _configure_radar_grid(self):
-      self.nc_radar=netCDF.Dataset(RADAR_DATA_URI)
-      lon=self.nc_radar.variables['lon'][:]
-      lat=self.nc_radar.variables['lat'][:]
-      try:
-        mask=self.nc_radar.variables['mask'][:]
-      except: mask=np.zeros(x.shape,'bool')
+        
 
-      idx, idy = np.where(mask == 1.0)
-      idv = np.arange(len(idx))
-      np.random.shuffle(idv)
+        #maskv = self.ncg.variables['mask_psi'][:]
+        #lon = self.ncg.variables['lon_psi'][:]
+        #lat = self.ncg.variables['lat_psi'][:]
 
-      Nvec = len(idx) / self.decimate_factor
-      idv = idv[:Nvec]
-      self.radar_idx = idx[idv]
-      self.radar_idy = idy[idv]
+        ## What is happening here? Why is this necessary?
+        #self.radar_angle = shrink(self.ncg.variables['angle'][:], lon.shape)
+        self.nc_radar=netCDF.Dataset(RADAR_DATA_URI)
+        lon=self.nc_radar.variables['lon'][:]
+        lat=self.nc_radar.variables['lat'][:]
+        try:
+            mask=self.nc_radar.variables['mask'][:]
+        except: 
+            mask=np.ones(lon.shape,'bool')
 
-      # save the radar locations as JSON file
-      self.radar_grid = {
+        idx, idy = np.where(mask == 1)
+        if 0:
+          idv = np.arange(len(idx))
+          np.random.shuffle(idv)
+
+          Nvec = len(idx) / self.decimate_factor
+          idv = idv[:Nvec]
+
+          self.radar_idx = idx[idv]
+          self.radar_idy = idy[idv]
+        else:
+          self.radar_idx = idx
+          self.radar_idy = idy
+
+
+        # save the grid locations as JSON file
+        self.radar_grid = {
             'lon': lon[self.radar_idx, self.radar_idy],
             'lat': lat[self.radar_idx, self.radar_idy]}
-
-
-    def radar_frame(self,tind):
-      from dateutil import parser
-      from netcdftime import utime
-      import datetime
-
-      DtMax=datetime.timedelta(days=1)
-
-      # load radar times:
-      tnum=self.nc_radar.variables['time'][:]
-      tunits=self.nc_radar.variables['time'].units
-      time=utime(tunits,calendar='standard').num2date(tnum)
-
-      # current model date:
-      date=self.dates[tind]
-
-      # find nearest time in radar:
-      d=np.abs(time-date)
-      i=np.where(d==d.min())[0][0]
-
-      # let the max diff be 1 day:
-      if time[i]>date: dt=time[i]-date
-      else: dt=date-time[i]
-      if dt>DtMax: return {}
-
-      u=self.nc_radar.variables['u'][i]
-      v=self.nc_radar.variables['v'][i]
-
-      vector = {'date': time[i].isoformat(),
-                  'u': u[self.radar_idx, self.radar_idy],
-                  'v': v[self.radar_idx, self.radar_idy]}
-      print 'loading radar vel done'
-      return vector
 
     def velocity_frame(self, frame_number):
         if self.isForec: frame_number=-1-frame_number
@@ -179,22 +160,72 @@ class THREDDSFrameSource(object):
             #'u':u,'v':v}
                   'u': u[self.velocity_idx, self.velocity_idy],
                   'v': v[self.velocity_idx, self.velocity_idy]}
-        print 'loading vel done'
+        print 'loading velocity_frame done'
+
         return vector
+		
+    def radar_frame(self, tind):
+        from dateutil import parser
+        from netcdftime import utime
+        import datetime
+
+        DtMax=datetime.timedelta(days=1)
+
+        # load radar times:
+        tnum=self.nc_radar.variables['time'][:]
+        tunits=self.nc_radar.variables['time'].units
+        time=utime(tunits,calendar='standard').num2date(tnum)
+        
+        # current model date:
+        date=self.dates[tind]
+
+        # find nearest time in radar:
+        d=np.abs(time-date)
+        i=np.where(d==d.min())[0][0]
+
+        # let the max diff be 1 day:
+        if time[i]>date: 
+            dt=time[i]-date
+        else: 
+            dt=date-time[i]
+        if dt>DtMax: 
+            print 'loading radar_frame done but dt>DtMax !'
+            print '  current time: %s'%date.isoformat()
+            print '  radar range: %s to %s'%(time[0].isoformat(),time[-1].isoformat())
+            #return {'date': time[i].isoformat(),'u': [],'v': []}
+
+        u=self.nc_radar.variables['u'][i]
+        v=self.nc_radar.variables['v'][i]
+
+        vector = {'date': time[i].isoformat(),
+                  'u': u[self.radar_idx, self.radar_idy],
+                  'v': v[self.radar_idx, self.radar_idy]}
+
+        print self.radar_grid['lon'].shape
+        print self.radar_grid['lat'].shape
+        print vector['u'].shape
+        print vector['v'].shape
+        print vector['u'].max()
+        print vector['u'].min()
+        print vector['v'].max()
+        print vector['v'].min()
+
+        print 'loading radar_frame done'
+        
+        return vector       
 
     def salt_frame(self, frame_number, num_levels=10, logspace=True,
                    cmap=None):
         if self.isForec: frame_number=-1-frame_number
-#        frame_number=0
-#        print 'loading salt frame number %d'%frame_number, logspace
-        print 'loading salt  frame number %d, isforec=%d'%(frame_number,self.isForec)
+
+        print 'loading salt frame number %d, isforec=%d'%(frame_number,self.isForec)
         salt = self.nc.variables['salt'][frame_number, -1, :, :]
         salt=np.ma.masked_where(salt>1e36,salt)
         salt[0,-1]=100
         salt[0,-2]=-100
 
         salt_range = (salt.max() - salt.min()) * 0.05
-        print(salt.max(), salt.min(), salt.min() - salt_range,logspace)
+        #print(salt.max(), salt.min(), salt.min() - salt_range,logspace)
         if logspace:
             levels = np.logspace(
                 np.log(salt.min() - salt_range),
@@ -304,16 +335,16 @@ def write_vector(vector, outfile):
 # length of animation (number of frames)
 def main(NFRAMES=90, output_dir=None):
     np.random.seed(0xDEADBEEF)
-    if output_dir is None:
-        output_dir = os.path.join(os.path.dirname(__file__),
-                                  '../static/data/json')
-    filename = partial(os.path.join, output_dir)
-    frame_source = THREDDSFrameSource(HINDCAST_CACHE_DATA_URI, decimate_factor=10)
-    write_vector(frame_source.velocity_grid, filename('grd_locations.json'))
+    #if output_dir is None:
+    #    output_dir = os.path.join(os.path.dirname(__file__),
+    #                              '../static/data/json')
+    #filename = partial(os.path.join, output_dir)
+    #frame_source = THREDDSFrameSource(HINDCAST_CACHE_DATA_URI, decimate_factor=10)
+    #write_vector(frame_source.velocity_grid, filename('grd_locations.json'))
 
-    for tidx in range(NFRAMES):
-        vector = frame_source.velocity_frame(tidx)
-        write_vector(vector, filename('step{}.json'.format(tidx)))
+    #for tidx in range(NFRAMES):
+    #    vector = frame_source.velocity_frame(tidx)
+    #    write_vector(vector, filename('step{}.json'.format(tidx)))
 
 
 if __name__ == '__main__':

@@ -165,7 +165,7 @@ Models.radarFrameSource = (function($, Trig, Config) {
 
     function RadarFrameSource(config) {
         $.extend(this, defaults, config);
-        this._redar_frames = {};
+        this._radar_frames = {};
         this.setBarbLocation(this.barbLocation);
     };
 
@@ -189,7 +189,7 @@ Models.radarFrameSource = (function($, Trig, Config) {
                          [barb[2], barb[1]],
                          [endpoint, startpoint]);
         }
-        date = velocityVectors.date;
+        date = radarVectors.date;
         return {date: date, vectors: vectors};
     };
 

@@ -344,7 +344,10 @@ MapView = (function($, L, Models, Config) {
 		
 		if (self.visibleLayers.radar) {
             self.radarView && self.radarView.redraw(
-                //To be constructed
+                function radar_call(data){
+					self.tabsControl && self.tabsControl.updateInfo({frame: self.currentFrame, date: data.date});
+					callback && callback(data);
+				}
             );
         }
     };
