@@ -5,7 +5,7 @@ import json
 from functools import partial
 
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
 import netCDF4 as netCDF
@@ -33,11 +33,33 @@ HINDCAST_CACHE_DATA_URI = os.path.join(DATA_DIR, filename)
 _, filename = os.path.split(FORECAST_DATA_URI)
 FORECAST_CACHE_DATA_URI = os.path.join(DATA_DIR, filename)
 
+def gen_regular_uv_inds(mask,d0=3,d1=[2,3,4]):
+  di=dj=d0
+  m=np.zeros(mask.shape,bool)
+  m[::di,::dj]=1
+  m[mask==0]=0
+
+  i0=np.where(m.flat==1)[0]
+
+  inds={}
+  inds[1]=range(i0.size)
+  for D in d1:
+    m[:]=False
+    m[::di*D,::dj*D]=1
+    m[mask==0]=0
+    i1=np.where(m.flat==1)[0]
+    I=[np.where(i0==j)[0][0] for j in i1]
+    inds[D]=I
+
+  return inds,i0
+
 
 class THREDDSFrameSource(object):
 
     def __init__(self, data_uri, decimate_factor=10,
-                 grdfile=GRD):
+                 grdfile=GRD,uv_regular=True):
+
+        self.uv_regular=uv_regular
         self.data_uri = data_uri
         self.isForec=data_uri==FORECAST_DATA_URI
         self.decimate_factor = decimate_factor
@@ -70,26 +92,27 @@ class THREDDSFrameSource(object):
         maskv = self.ncg.variables['mask_psi'][:]
         lon = self.ncg.variables['lon_psi'][:]
         lat = self.ncg.variables['lat_psi'][:]
-
-        # What is happening here? Why is this necessary?
         self.velocity_angle = shrink(self.ncg.variables['angle'][:], lon.shape)
 
-        idx, idy = np.where(maskv == 1.0)
 
-        idv = np.arange(len(idx))
-        # FIXME: This is a problem when open a connection and load some data,
-        # then wait for a while and try to load some new data. This class gets
-        # reinstatiated and the shuffled indices don't match. The output data
-        # is thusly scrambled.
-        np.random.shuffle(idv)
-
-        Nvec = len(idx) / self.decimate_factor
-        idv = idv[:Nvec]
-        self.velocity_idx = idx[idv]
-        self.velocity_idy = idy[idv]
-
-        # save the grid locations as JSON file
-        self.velocity_grid = {
+        if self.uv_regular:
+          inds,i0=gen_regular_uv_inds(mask=maskv)
+          self.velocity_inds=inds
+          self.velocity_i0=i0
+          self.velocity_grid = dict(lon=lon.flat[i0],lat=lat.flat[i0])
+        else:
+          idx, idy = np.where(maskv == 1.0)
+          idv = np.arange(len(idx))
+          # FIXME: This is a problem when open a connection and load some data,
+          # then wait for a while and try to load some new data. This class gets
+          # reinstatiated and the shuffled indices don't match. The output data
+          # is thusly scrambled.
+          np.random.shuffle(idv)
+          Nvec = len(idx) / self.decimate_factor
+          idv = idv[:Nvec]
+          self.velocity_idx = idx[idv]
+          self.velocity_idy = idy[idv]
+          self.velocity_grid = {
             'lon': lon[self.velocity_idx, self.velocity_idy],
             'lat': lat[self.velocity_idx, self.velocity_idy]}
 
@@ -103,42 +126,23 @@ class THREDDSFrameSource(object):
         # # We don't need to decimate or shuffle this because we're going to be
         # # shipping out derived contour lines
         # self.salt_idx, self.salt_idy = mask.nonzero()	
+
     def _configure_radar_grid(self):
-        
-
-        #maskv = self.ncg.variables['mask_psi'][:]
-        #lon = self.ncg.variables['lon_psi'][:]
-        #lat = self.ncg.variables['lat_psi'][:]
-
-        ## What is happening here? Why is this necessary?
-        #self.radar_angle = shrink(self.ncg.variables['angle'][:], lon.shape)
         self.nc_radar=netCDF.Dataset(RADAR_DATA_URI)
         lon=self.nc_radar.variables['lon'][:]
         lat=self.nc_radar.variables['lat'][:]
         try:
-            mask=self.nc_radar.variables['mask'][:]
+          mask=self.nc_radar.variables['mask'][:]
         except: 
-            mask=np.ones(lon.shape,'bool')
-
-        idx, idy = np.where(mask == 1)
-        if 0:
-          idv = np.arange(len(idx))
-          np.random.shuffle(idv)
-
-          Nvec = len(idx) / self.decimate_factor
-          idv = idv[:Nvec]
-
-          self.radar_idx = idx[idv]
-          self.radar_idy = idy[idv]
-        else:
-          self.radar_idx = idx
-          self.radar_idy = idy
+          mask=np.ones(lon.shape,'bool')
 
 
-        # save the grid locations as JSON file
-        self.radar_grid = {
-            'lon': lon[self.radar_idx, self.radar_idy],
-            'lat': lat[self.radar_idx, self.radar_idy]}
+        # use regular radar grid, always:
+        inds,i0=gen_regular_uv_inds(mask=mask,d0=1)
+        self.radar_inds=inds
+        self.radar_i0=i0
+        self.radar_grid = dict(lon=lon.flat[i0],lat=lat.flat[i0])
+
 
     def velocity_frame(self, frame_number):
         if self.isForec: frame_number=-1-frame_number
@@ -148,34 +152,35 @@ class THREDDSFrameSource(object):
         u, v = shrink(u, v)
         u, v = rot2d(u, v, self.velocity_angle)
 
-        #u=u[self.velocity_idx, self.velocity_idy]
-        #v=v[self.velocity_idx, self.velocity_idy]
-          
-        #u[-1]=2
-        #v[-1]=0
-        #self.velocity_grid['lon'][-1]=-89.666614
-        #self.velocity_grid['lat'][-1]=26.610854
-        
-        vector = {'date': self.dates[frame_number].isoformat(),
-            #'u':u,'v':v}
+        if self.uv_regular:
+            vector = {'date': self.dates[frame_number].isoformat(),
+                      'u':    u.flat[self.velocity_i0],
+                      'v':    v.flat[self.velocity_i0],
+                      'inds': self.velocity_inds}
+        else:
+            vector = {'date': self.dates[frame_number].isoformat(),
                   'u': u[self.velocity_idx, self.velocity_idy],
                   'v': v[self.velocity_idx, self.velocity_idy]}
+
         print 'loading velocity_frame done'
 
         return vector
-		
+
+
     def radar_frame(self, tind):
         from dateutil import parser
         from netcdftime import utime
         import datetime
 
-        DtMax=datetime.timedelta(days=1)
-
         # load radar times:
         tnum=self.nc_radar.variables['time'][:]
         tunits=self.nc_radar.variables['time'].units
         time=utime(tunits,calendar='standard').num2date(tnum)
-        
+
+        try:
+          DtMax=time[-1]-time[-2]
+        except: DtMax=datetime.timedelta(days=1./24)
+
         # current model date:
         date=self.dates[tind]
 
@@ -183,7 +188,7 @@ class THREDDSFrameSource(object):
         d=np.abs(time-date)
         i=np.where(d==d.min())[0][0]
 
-        # let the max diff be 1 day:
+        # let the max diff be radar dt
         if time[i]>date: 
             dt=time[i]-date
         else: 
@@ -198,8 +203,9 @@ class THREDDSFrameSource(object):
         v=self.nc_radar.variables['v'][i]
 
         vector = {'date': time[i].isoformat(),
-                  'u': u[self.radar_idx, self.radar_idy],
-                  'v': v[self.radar_idx, self.radar_idy]}
+                  'u':    u.flat[self.radar_i0],
+                  'v':    v.flat[self.radar_i0],
+                  'inds': self.radar_inds}
 
         print self.radar_grid['lon'].shape
         print self.radar_grid['lat'].shape
@@ -209,48 +215,69 @@ class THREDDSFrameSource(object):
         print vector['u'].min()
         print vector['v'].max()
         print vector['v'].min()
-
         print 'loading radar_frame done'
-        
-        return vector       
 
-    def salt_frame(self, frame_number, num_levels=10, logspace=True,
-                   cmap=None):
+        return vector
+
+    def salt_frame(self, frame_number, num_levels=10, logspace=False,
+                   cmap=None,varname='salt'):
+
         if self.isForec: frame_number=-1-frame_number
 
         print 'loading salt frame number %d, isforec=%d'%(frame_number,self.isForec)
-        salt = self.nc.variables['salt'][frame_number, -1, :, :]
-        salt=np.ma.masked_where(salt>1e36,salt)
-        salt[0,-1]=100
-        salt[0,-2]=-100
-
-        salt_range = (salt.max() - salt.min()) * 0.05
-        #print(salt.max(), salt.min(), salt.min() - salt_range,logspace)
-        if logspace:
-            levels = np.logspace(
-                np.log(salt.min() - salt_range),
-                np.log(salt.max() + salt_range),
-                num_levels, True, np.exp(1))
-            levels=np.logspace(np.log(5),np.log(36),num_levels)
-            print '====',levels
+        if varname=='speed':
+          u=self.nc.variables['u'][frame_number, -1, :, :]
+          v=self.nc.variables['v'][frame_number, -1, :, :]
+          speed_=np.sqrt(u[:-1]**2+v[:,:-1]**2)
+          speed=np.zeros((u.shape[0],)+(v.shape[1],),'f')
+          speed[:-1,:-1]=speed_
+          speed[-1,:]=speed[-2,:]
+          speed[:,-1]=speed[:,-2]
+          salt=speed
         else:
-            levels = np.linspace(
-                (salt.min() - salt_range),
-                (salt.max() + salt_range),
-                num_levels)
+          salt = self.nc.variables[varname][frame_number, -1, :, :]
+
+        if varname=='speed':
+          salt=np.ma.masked_where(salt>1e3,salt)
+        else:
+          mask = self.ncg.variables['mask_rho'][:]
+          salt=np.ma.masked_where(mask==0,salt)
+
+#        salt[0,0]=-100
+#        salt[0,1]=100
+
+        if logspace:
+          salt_range = (salt.max() - salt.min()) * 0.05
+          levels = np.logspace(
+                  np.log(salt.min() - salt_range),
+                  np.log(salt.max() + salt_range),
+                  num_levels, True, np.exp(1))
+          levels=np.logspace(np.log(5),np.log(36),num_levels)
+        else:
+          if varname=='salt':
             levels=np.linspace(5,35,num_levels)
+          elif varname=='temp':
+            levels=np.linspace(20,24,num_levels)
+          elif varname=='speed':
+            levels=np.linspace(0,2,num_levels)
 
         plt.figure()
         if cmap is None:
-            try:
-                from cmocean.cm import salinity
-                cmap = salinity
-            except ImportError:
-                cmap = 'YlGnBu'
+          try:
+            from cmocean.cm import salinity, temperature
+            if varname=='salt': cmap=salinity
+            elif varname=='temp': cmap=temperature
+            elif varname=='speed': cmap=plt.cm.PuRd
+          except ImportError:
+            cmap = plt.cm.YlGnBu
+
         else:
             cmap = plt.cm.get_cmap(cmap)
+
+        print levels
         contours = plt.contourf(self.salt_lon, self.salt_lat, salt, levels,
                                 cmap=cmap, extend='both')
+
         geojson = self.contours_to_geoJSON(contours)
         plt.close()
 
@@ -280,6 +307,7 @@ class THREDDSFrameSource(object):
             line_strings = []
             if np.isneginf(cvalue): cvalue=0
             if np.isposinf(cvalue): cvalue=100
+            #if np.isneginf(cvalue) or np.isposinf(cvalue): continue
 #            print '---->',cvalue
             for path in collection.get_paths():
                 path.should_simplify = False

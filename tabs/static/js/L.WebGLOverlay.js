@@ -63,16 +63,40 @@ L.WebGLVectorLayer = L.Class.extend({
     // We will make a 1xN texture image, where each pixel is a different color
     // On the GPU we index into this palette get the color of a line
 
-    // Set the color palette
-    this.palette = new Uint8Array([
-      0   , 0   , 0   , 255 , // 0 Black
-      255 , 0   , 0   , 255 , // 1 Red
-      0   , 255 , 0   , 255 , // 2 Green
-      0   , 0   , 255 , 255 , // 3 Blue
-      255 , 0   , 255 , 255 , // 4 Purple
-      255 , 255 , 0   , 255 , // 5 Orange
-      0   , 255 , 255 , 255 , // 6 Teal
-      255 , 255 , 255 , 255   // 7 White
+    // // Set the color palette
+    // this.palette = new Uint8Array([
+      // 0   , 0   , 0   , 255 , // 0 Black
+      // 255 , 0   , 0   , 255 , // 1 Red
+      // 0   , 255 , 0   , 255 , // 2 Green
+      // 0   , 0   , 255 , 255 , // 3 Blue
+      // 255 , 0   , 255 , 255 , // 4 Purple
+      // 255 , 255 , 0   , 255 , // 5 Orange
+      // 0   , 255 , 255 , 255 , // 6 Teal
+      // 255 , 255 , 255 , 255   // 7 White
+    // ]);
+	this.palette = new Uint8Array([
+      255 , 255 , 255 , 255 , // 0 White
+      114 , 247   , 173   , 255 , // 1 
+      113   , 247 , 135   , 255 , // 2 
+      112   , 245   , 95 , 255 , // 3 
+      112 , 245   , 56 , 255 , // 4 
+      116 , 246 , 47   , 255 , // 5 
+      134   , 246 , 49 , 255 , // 6 
+      159 , 246 , 51 , 255,   // 7 
+	  187 , 248 , 53 , 255,   // 8 
+	  217 , 246 , 56 , 255,   // 9 
+	  246 , 250 , 59 , 255,   // 10 Yellow
+	  250 , 225 , 56 , 255,   // 11 
+	  245 , 190 , 49 , 255,   // 12 
+	  241 , 155 , 44 , 255,   // 13 
+	  238 , 118 , 39 , 255,   // 14 
+	  236 , 82 , 35 , 255,   // 15 
+	  235 , 59 , 34 , 255,    // 16 
+	  139 , 0 , 0 , 255,    // 17 DarkRed
+	  128 , 0 , 0 , 255,    // 18 Maroon
+	  78 , 0 , 0 , 255,    // 19 Maroon
+	  35 , 0 , 0 , 255,    // 20 Maroon
+	  0 , 0 , 0 , 255,    // 21 Maroon
     ]);
     this.paletteSize = this.palette.length / 4;
 
@@ -198,6 +222,11 @@ L.WebGLVectorLayer = L.Class.extend({
     var pixel = {x: pixelX, y: pixelY};
     return pixel;
   },
+  
+  distanceBetwPixelToColor: function(pixel1,pixel2) {
+	var distance = Math.sqrt(Math.pow(pixel2.x-pixel1.x,2)+Math.pow(pixel2.y-pixel1.y,2));
+	return distance;
+  },
 
   translateMatrix: function(matrix, tx, ty) {
     // translation is in last column of matrix
@@ -242,20 +271,57 @@ L.WebGLVectorLayer = L.Class.extend({
     var cidx = 0;
 
     colors = colors || {};
+	
+	//Draw all arrows with same color
+	var constM = 25;
+	var selectedZoom = mapView.map.getZoom();
+	var minZoom = mapView.minZoom;
+	var scaleColor = Math.pow(2, selectedZoom - minZoom);
 
-    for (var i = 0; i < lines.length; i++) {
-      var color = colors[i] | 0;
+    for (var i = 0; i < lines.length; i+=3) {
+		
+	  // Define first line header arrow
       // First point in the line
-      var pixel = this.latLongToPixelXY(lines[i][0][0], lines[i][0][1]);
-      this.vertArray[vidx++] = pixel.x;
-      this.vertArray[vidx++] = pixel.y;
-      this.colorArray[cidx++] = color;
+      var pixel_h11 = this.latLongToPixelXY(lines[i][0][0], lines[i][0][1]);
+	  // Second point in the line
+      var pixel_h12 = this.latLongToPixelXY(lines[i][1][0], lines[i][1][1]);
 
-      // Second point in the line
-      pixel = this.latLongToPixelXY(lines[i][1][0], lines[i][1][1]);
-      this.vertArray[vidx++] = pixel.x;
-      this.vertArray[vidx++] = pixel.y;
+	  // Define second line header arrow
+	  var pixel_h21 = this.latLongToPixelXY(lines[i+1][0][0], lines[i+1][0][1]);
+	  var pixel_h22 = this.latLongToPixelXY(lines[i+1][1][0], lines[i+1][1][1]);
+	  
+	  // Define body line
+	  var pixel1 = this.latLongToPixelXY(lines[i+2][0][0], lines[i+2][0][1]);
+	  var pixel2 = this.latLongToPixelXY(lines[i+2][1][0], lines[i+2][1][1]);
+	  
+	  //var color = colors[i] | 0;
+	  var color = Math.floor(constM*scaleColor*this.distanceBetwPixelToColor(pixel1,pixel2));
+	  //console.log(color);
+	  
+	  
+	  //construct first line header arrow
+      this.vertArray[vidx++] = pixel_h11.x;
+      this.vertArray[vidx++] = pixel_h11.y;
       this.colorArray[cidx++] = color;
+      this.vertArray[vidx++] = pixel_h12.x;
+      this.vertArray[vidx++] = pixel_h12.y;
+	  this.colorArray[cidx++] = color;
+	  
+	  //construct second line header arrow
+      this.vertArray[vidx++] = pixel_h21.x;
+      this.vertArray[vidx++] = pixel_h21.y;
+      this.colorArray[cidx++] = color;
+      this.vertArray[vidx++] = pixel_h22.x;
+      this.vertArray[vidx++] = pixel_h22.y;
+	  this.colorArray[cidx++] = color;
+	  
+	  //construct first line header arrow
+      this.vertArray[vidx++] = pixel1.x;
+      this.vertArray[vidx++] = pixel1.y;
+      this.colorArray[cidx++] = color;
+      this.vertArray[vidx++] = pixel2.x;
+      this.vertArray[vidx++] = pixel2.y;
+	  this.colorArray[cidx++] = color;
     }
 
     var gl = this._ctx;

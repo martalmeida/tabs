@@ -192,14 +192,15 @@ def static_velocity_frame(time_step):
 
 
 # Retrieve salinity contours
-@app.route('/data/thredds/salt/step/<int:time_step>')
-def thredds_salt_frame(time_step):
+@app.route('/data/thredds/model/step/<int:time_step>')
+def thredds_model_frame(time_step):
     num_levels = request.args.get('numSaltLevels', 10)
     logspace = 'logspace' in request.args
     datasource = request.args.get('datasource', 'hindcast')
+    varname = request.args.get('varname', 'salt')
     fs = get_fs(datasource)
     salt = fs.salt_frame(
-        time_step, num_levels=num_levels, logspace=logspace)
+        time_step, num_levels=num_levels, logspace=logspace, varname=varname)
     return jsonify(salt)
 	
 	

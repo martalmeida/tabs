@@ -65,7 +65,10 @@ MapView = (function($, L, Models, Config) {
 		// Leaflet map object
         self.map = L.map('map', {center: self.mapCenter,
                                  zoom: self.defaultZoom,
-                                 layers: [mapboxTiles, buoys]});
+                                 /*layers: [buoys,mapboxTiles] <<-- if you want to set buoys by default */ 
+								 layers: [mapboxTiles],
+								 fullscreenControl: true
+						});
 
         // Re-render when map conditions change
         self.map.on('viewreset', function() {
@@ -80,6 +83,7 @@ MapView = (function($, L, Models, Config) {
             onclick: function onclick() { self.toggleRunState(); }
         });
         self.tabsControl.addTo(self.map);
+		
 
         L.Control.Toggle = L.Control.extend({
             options: {
@@ -130,15 +134,19 @@ MapView = (function($, L, Models, Config) {
 
         self.distanceScaleControl = L.control.scale(
             Config.distanceScaleOptions).addTo(self.map);
-
+		
+		//Sidebar
+		var sidebar = L.control.sidebar('sidebar').addTo(self.map);
+		
 		//Added by Alx
 		var overlayMaps = {
 			"Buoys": buoys
 		};
         // Add layer selector and hook up toggling of visibility flag
-        var lsc = self.layerSelectControl = L.control.layers(overlayMaps, [],{position: 'topleft'}).addTo(self.map);
+        var lsc = self.layerSelectControl = L.control.layers([], overlayMaps ,{position: 'topleft'}).addTo(self.map);
         lsc.addToggledOverlay = function addToggledOverlay(key, layer, name) {
-            lsc.addOverlay(layer, name);
+            // lsc.addOverlay(layer, name);
+			lsc.addBaseLayer(layer, name); //switch to radiobuttons
             self.map.on(
                 'overlayadd', _setLayerVisibility(self, key, layer, true));
             self.map.on(
@@ -151,16 +159,24 @@ MapView = (function($, L, Models, Config) {
             self.timestamps = data.timestamps;
         });
 
-        // Add visualization layers
-        if (Config.enableSalinity) {
-            self.saltView = SaltView.saltView(config).addTo(self);
-        }
-        if (Config.enableVelocity) {
-            self.velocityView = VelocityView.velocityView(config).addTo(self);
-        }
+
+		// Add visualization layers
 		if (Config.enableRadar) {
             self.radarView = RadarView.radarView(config).addTo(self);
         }
+		if (Config.enableVelocity) {
+            self.velocityView = VelocityView.velocityView(config).addTo(self);
+        }
+        if (Config.enableSalinity) {
+            self.saltView = SaltView.saltView(config).addTo(self);
+        }
+        if (Config.enableTemperature) {
+            self.temperatureView = TemperatureView.temperatureView(config).addTo(self);
+        }
+		if (Config.enableSpeed) {
+            self.speedView = SpeedView.speedView(config).addTo(self);
+        }
+
 
         self.redraw();
 
@@ -340,6 +356,24 @@ MapView = (function($, L, Models, Config) {
         }
 		else {
 			$('#salinity_legend').hide();
+		}
+		
+		if (self.visibleLayers.temperature) {
+            self.temperatureView && self.temperatureView.redraw(
+                function temperature_call(data) {
+                    self.tabsControl && self.tabsControl.updateInfo({
+						frame: self.currentFrame, 
+						date: data.date, 
+						numTemperatureLevels: self.temperatureView.numTemperatureLevels
+					});
+                    callback && callback(data);
+                }
+				
+            );
+			$('#temperature_legend').show();
+        }
+		else {
+			$('#temperature_legend').hide();
 		}
 		
 		if (self.visibleLayers.radar) {

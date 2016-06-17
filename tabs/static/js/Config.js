@@ -4,9 +4,11 @@ var Config = {
     // API
     velocityGridLocationsURL: '/data/thredds/velocity/grid',
     velocityFrameURL: '/data/thredds/velocity/step/',
-    saltFrameURL: '/data/thredds/salt/step/',
-	radarGridLocationsURL : '/data/thredds/radar/grid',
-	radarFrameURL: '/data/thredds/radar/step/',
+    saltFrameURL: '/data/thredds/model/step/',
+    temperatureFrameURL: '/data/thredds/model/step/',
+	speedFrameURL: '/data/thredds/model/step/',
+    radarGridLocationsURL : '/data/thredds/radar/grid',
+    radarFrameURL: '/data/thredds/radar/step/',
     domainURL: '/data/prefetched/domain',
     timestampURL: '/data/thredds/timestamps',
     tileLayerURL: 'https://{s}.tiles.mapbox.com/v4/tabs-enthought.j3nibphe/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoidGFicy1lbnRob3VnaHQiLCJhIjoiX0RNTzlmbyJ9.gio9AiDol4CT13yJ2GyRHw',
@@ -22,6 +24,10 @@ var Config = {
     contourOptions: {
         numSaltLevels: 12,
         logspaceSaltLevels: false,
+		numTemperatureLevels: 12,
+		logspaceTemperatureLevels: false,
+		numSpeedLevels: 12,
+		logspaceSpeedLevels: false,
 
         // Parameters defined here override the data
         // Contour outline color (Undefined matches the fill color)
@@ -38,6 +44,8 @@ var Config = {
     enableVelocity: true,
     enableSalinity: true,
 	enableRadar: true,
+	enableTemperature: true,
+	enableSpeed: true,
 
 
     // Map view config
@@ -73,8 +81,10 @@ var Config = {
 
     // Which data is shown by default?
     visibleLayers: {
+		temperature: true,
         velocity: true,
-        salinity: true,
+		speed: true,
+        salinity: true,	
 		radar: true
     },
 

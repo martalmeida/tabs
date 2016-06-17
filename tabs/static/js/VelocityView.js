@@ -2,11 +2,17 @@ var VelocityView = (function($, L, Models, Config) {
 
     var defaults = {
 
+		// Zoom level
+		zoomLevel: 0,
+		
         // The number of vectors to display
         numVectorsToDisplay: 0,
 
         // The locations of the data points
         points: [],
+
+        // Indexes of points
+        inds:[],
 
         // Position of the barbs on the arrows ('head', 'center', 'tail')
         barbLocation: Config.barbLocation,
@@ -108,7 +114,19 @@ var VelocityView = (function($, L, Models, Config) {
                        datasource: mapView.dataSource};
         self.vfs.withVelocityFrame(options, function(data) {
             // Three lines per arrow
-            var lines = data.vectors.slice(0, self.numVectorsToDisplay * 3);
+            //var llines = data.vectors.slice(0, self.numVectorsToDisplay * 3);
+			//console.log(llines[0]);
+
+			lines = [];
+			var indx=data.indx[Math.max(4-self.zoomLevel,1)]
+			
+			for (var i = 0; i < indx.length; i++){
+				lines.push(data.vectors[indx[i]*3]);
+				lines.push(data.vectors[indx[i]*3+1]);
+				lines.push(data.vectors[indx[i]*3+2]);
+			}
+			console.log(lines.length);
+			
 
             // XXX: We could be passing colors here now
             //self.glOverlay.setLines(lines, {41: 2, 32: 7, 305: 4});
@@ -126,7 +144,13 @@ var VelocityView = (function($, L, Models, Config) {
         var minZoom = self.mapView.minZoom;
         var scale = Math.pow(4, zoom - minZoom);
         var n = Math.min(Math.ceil(density * scale), nPoints);
-        console.log('show', n, 'at zoom level', zoom);
+		//n = Math.max(Math.ceil(density * scale), nPoints);
+		//n = 5000;
+        
+		self.zoomLevel=zoom-minZoom;
+		//alert('n:'+n+' zoomLevel:'+self.zoomLevel);
+        
+		console.log('show', n, 'at zoom level', zoom);
         self.numVectorsToDisplay = n;
         self.redraw();
     };

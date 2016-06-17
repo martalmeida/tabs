@@ -25,6 +25,17 @@ API = (function(Config, $) {
         withJSON(urlForVelocityGridLocations(options), callback);
     }
 	
+	function withSpeedFrameJSON(options, callback) {
+        if (callback === undefined) console.log('Callback undefined');
+        withJSON(urlForSpeedFrame(options), callback);
+		callback = callback;
+    }
+
+    function withSpeedGridLocationsJSON(options, callback) {
+        if (callback === undefined) console.log('Callback undefined');
+        withJSON(urlForSpeedGridLocations(options), callback);
+    }
+	
 	function withRadarFrameJSON(options, callback) {
         if (callback === undefined) console.log('Callback undefined');
         withJSON(urlForRadarFrame(options), callback);
@@ -39,15 +50,22 @@ API = (function(Config, $) {
         withJSON(urlForSaltFrame(options), callback);
     }
 
+	function withTemperatureFrameJSON(options, callback) {
+        withJSON(urlForTemperatureFrame(options), callback);
+    }
+	
     function withFrameTimestamps(options, callback) {
         withJSON(urlForTimestamps(options), callback);
     }
+	
 
     return {
         withJSON: withJSON,
         withVelocityFrameJSON: withVelocityFrameJSON,
         withVelocityGridLocationsJSON: withVelocityGridLocationsJSON,
         withSaltFrameJSON: withSaltFrameJSON,
+		withTemperatureFrameJSON: withTemperatureFrameJSON,
+		withSpeedFrameJSON: withSpeedFrameJSON,
         withFrameTimestamps: withFrameTimestamps,
 		withRadarFrameJSON: withRadarFrameJSON,
 		withRadarGridLocationsJSON: withRadarGridLocationsJSON
@@ -92,6 +110,31 @@ API = (function(Config, $) {
             .set('datasource', options.datasource);
         return url + options.frame + query;
     }
+	
+    function urlForSpeedGridLocations(options) {
+        if (options.datasource === undefined) {
+            console.log('options.datasource undefined');
+            options.datasource = '';
+        }
+        url = Config.speedGridLocationsURL;
+        var query = $.query
+            .set('datasource', options.datasource);
+        return url + query;
+    }
+
+	function urlForSpeedFrame(options) {
+        if (options.frame === undefined) {
+            console.log('options.frame undefined (default 0)');
+            options.frame = 0;
+        }
+        var url = Config.speedFrameURL;
+        var query = $.query
+            .set('numTemperatureLevels', options.numSpeedLevels)
+			.set('datasource', options.datasource)
+            .set('logspace', options.logspaceSpeedLevels)
+			.set('varname', 'speed');
+        return url + options.frame + query;
+    }
 
     function urlForSaltFrame(options) {
         if (options.frame === undefined) {
@@ -103,6 +146,20 @@ API = (function(Config, $) {
             .set('numSaltLevels', options.numSaltLevels)
 			.set('datasource', options.datasource)
             .set('logspace', options.logspaceSaltLevels);
+        return url + options.frame + query;
+    }
+	
+	function urlForTemperatureFrame(options) {
+        if (options.frame === undefined) {
+            console.log('options.frame undefined (default 0)');
+            options.frame = 0;
+        }
+        var url = Config.temperatureFrameURL;
+        var query = $.query
+            .set('numTemperatureLevels', options.numTemperatureLevels)
+			.set('datasource', options.datasource)
+            .set('logspace', options.logspaceTemperatureLevels)
+			.set('varname', 'temp');
         return url + options.frame + query;
     }
 	

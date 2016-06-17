@@ -1,4 +1,5 @@
 Models = {}
+
 Models.velocityFrameSource = (function($, Trig, Config) {
 
     var defaults = {
@@ -35,7 +36,8 @@ Models.velocityFrameSource = (function($, Trig, Config) {
                          [endpoint, startpoint]);
         }
         date = velocityVectors.date;
-        return {date: date, vectors: vectors};
+        indx = velocityVectors.inds;
+        return {date: date, vectors: vectors, indx: indx};
     };
 
 
@@ -149,6 +151,66 @@ Models.saltFrameSource = (function($, Config) {
 
     return function saltframeSource(config) {
         return new SaltFrameSource(config);
+    };
+
+
+}(jQuery, Config));
+
+Models.temperatureFrameSource = (function($, Config) {
+
+    var defaults = {
+    };
+
+    function TemperatureFrameSource(config) {
+        $.extend(this, defaults, config);
+
+        // We don't need to cache temperature frames because they currently come
+        // straight from the geoJSON.
+        // If that changes, we'll have to think about the right way to cache
+        // with multiple parameters and JS's ridiculous handling of Object.
+    };
+
+    TFS_proto = TemperatureFrameSource.prototype;
+
+    TFS_proto.withTemperatureFrame = function withTemperatureFrame(config, callback) {
+        var self = this;
+        API.withTemperatureFrameJSON(config, function(obj) {
+            callback && callback(obj);
+        });
+    };
+
+    return function temperatureframeSource(config) {
+        return new TemperatureFrameSource(config);
+    };
+
+
+}(jQuery, Config));
+
+Models.speedFrameSource = (function($, Config) {
+
+    var defaults = {
+    };
+
+    function SpeedFrameSource(config) {
+        $.extend(this, defaults, config);
+
+        // We don't need to cache speed frames because they currently come
+        // straight from the geoJSON.
+        // If that changes, we'll have to think about the right way to cache
+        // with multiple parameters and JS's ridiculous handling of Object.
+    };
+
+    SpeedFS_proto = SpeedFrameSource.prototype;
+
+    SpeedFS_proto.withSpeedFrame = function withSpeedFrame(config, callback) {
+        var self = this;
+        API.withSpeedFrameJSON(config, function(obj) {
+            callback && callback(obj);
+        });
+    };
+
+    return function speedframeSource(config) {
+        return new SpeedFrameSource(config);
     };
 
 
