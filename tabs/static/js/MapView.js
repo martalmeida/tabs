@@ -5,46 +5,31 @@ MapView = (function($, L, Models, Config) {
     var RUN_FOREVER = 2;
 
     var defaults = {
-
         visibleLayers: Config.visibleLayers,
-
         // Speed of animation (larger is slower)
         delay: Config.delay,
-
         // Does the animation automatically start?
         runState: RUN_STOPPED,
-
         // Use forecast or hindcast data?
         dataSource: 'hindcast',
-
         // Number of time steps to use
         nFrames: Config.nFrames,
-
         // Initial zoom level
         minZoom: Config.minZoom,
         defaultZoom: Config.defaultZoom,
         maxZoom: Config.maxZoom,
         mapCenter: Config.mapCenter,
-
         tileLayerURL: Config.tileLayerURL,
-
         attribution: "© <a href='https://www.mapbox.com/map-feedback/'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap contributors</a>",
-
         // Outline of the region of interest
         domainURL: Config.domainURL
-
     };
 
-
     var MapView = function MapView(config) {
-
         var self = this;
-
         $.extend(self, defaults, config);
-
         // The frame we're looking at
         self.currentFrame = 0;
-
         // The frame we'd like to load
         self.queuedFrame = 0;
 
@@ -54,10 +39,14 @@ MapView = (function($, L, Models, Config) {
             minZoom: self.minZoom
         });
 
+        
         // Leaflet map object
         self.map = L.map('map', {center: self.mapCenter,
                                  zoom: self.defaultZoom,
-                                 layers: [mapboxTiles]});
+                                 /*layers: [buoys,mapboxTiles] <<-- if you want to set buoys by default */ 
+                                 layers: [mapboxTiles],
+                                 fullscreenControl: true
+        });
 
         // Re-render when map conditions change
         self.map.on('viewreset', function() {
@@ -93,12 +82,17 @@ MapView = (function($, L, Models, Config) {
                     L.DomEvent.stopPropagation(event);
                     self.options.onclick(event);
                     self.updateText(event);
+                    self.updateSideBar(event);
                 });
                 return this.container;
             },
             updateText: function() {
                 console.log('Switch data source to', self.dataSource);
-                self.dataSourceButton.container.innerHTML = self.dataSource;
+                self.dataSourceButton.container.innerHTML = '<img src="js/external/leaflet/images/databases.png" alt="Source"/> '+self.dataSource;
+            },
+            updateSideBar: function() {
+                $('#sidebar').toggle();
+                console.log('SideBar is', $('#sidebar').css('display')==="block" ? "visible" : "hidden");
             }
 
         });
@@ -123,11 +117,38 @@ MapView = (function($, L, Models, Config) {
         self.distanceScaleControl = L.control.scale(
             Config.distanceScaleOptions).addTo(self.map);
 
+        //Sidebar
+        var sidebar = L.control.sidebar('sidebar',{position: 'left'}).addTo(self.map);
+
+        //-------------------  Added by Alx  ----------------------
+        var buoy1 = L.marker([25.61, -96.02]).bindPopup('Buoy 1'),
+            buoy2 = L.marker([28.74, -92.99]).bindPopup('Buoy 2'),
+            buoy3 = L.marker([28.73, -89.8]).bindPopup('Buoy 3'),
+            buoy4 = L.marker([27.77, -94.23]).bindPopup('Buoy 4');
+
+        var buoys = L.layerGroup([buoy1, buoy2, buoy3, buoy4]);	
+        var noneMap = L.tileLayer('', {id: 'EmptyMap',minZoom: Config.minZoom, maxZoom: Config.maxZoom});
+        var baseMaps = {"None": noneMap};
+        //var overlayMaps = {"Buoys": buoys};
+		var overlayMaps = {};
+        //---------------------------------------------------------
+
         // Add layer selector and hook up toggling of visibility flag
-        var lsc = self.layerSelectControl = L.control.layers([], [],
-            {position: 'topleft'}).addTo(self.map);
+        lsc = self.layerSelectControl = L.control.layers(baseMaps, overlayMaps ,{position: 'topleft'}).addTo(self.map);
         lsc.addToggledOverlay = function addToggledOverlay(key, layer, name) {
-            lsc.addOverlay(layer, name);
+
+            switch(name.toLowerCase()) {
+                case "salinity":
+                case "temperature":
+                case "speed":
+                    lsc.addBaseLayer(layer, name);
+                    break;
+                default:
+                    lsc.addOverlay(layer, name);
+                    break;
+            }
+            // lsc.addOverlay(layer, name);
+            // lsc.addBaseLayer(layer, name); //switch to radiobuttons
             self.map.on(
                 'overlayadd', _setLayerVisibility(self, key, layer, true));
             self.map.on(
@@ -141,13 +162,28 @@ MapView = (function($, L, Models, Config) {
         });
 
         // Add visualization layers
-        if (Config.enableSalinity) {
-            self.saltView = SaltView.saltView(config).addTo(self);
+        
+        if (Config.enableWind) {
+            self.windView = WindView.windView(config).addTo(self);
         }
         if (Config.enableVelocity) {
             self.velocityView = VelocityView.velocityView(config).addTo(self);
         }
-
+        if (Config.enableRadar) {
+            self.radarView = RadarView.radarView(config).addTo(self);
+        }
+        if (Config.enableSalinity) {
+            self.saltView = SaltView.saltView(config).addTo(self);
+        }
+        if (Config.enableTemperature) {
+            self.temperatureView = TemperatureView.temperatureView(config).addTo(self);
+        }
+        if (Config.enableSpeed) {
+            self.speedView = SpeedView.speedView(config).addTo(self);
+        }
+        if (Config.enableBuoys) {
+            self.buoysView = BuoysView.buoysView(config).addTo(self);
+        }
         self.redraw();
 
         // Register hotkeys
@@ -173,6 +209,7 @@ MapView = (function($, L, Models, Config) {
         } else {
             self.dataSource = 'forecast';
         }
+        self.queueFrame(0);
         self.start(RUN_SYNC);
         // clear vector cache
         self.velocityView.clearCache();
@@ -204,7 +241,6 @@ MapView = (function($, L, Models, Config) {
         var zoom = self.map.getZoom();
         return scale * Math.pow(2, self.defaultZoom - zoom);
     };
-
 
     // hard-coded region of interest outline
     MapView.prototype.addRegionOutline = function addRegionOutline() {
@@ -300,8 +336,9 @@ MapView = (function($, L, Models, Config) {
 
     MapView.prototype.redraw = function redraw(callback) {
         var self = this;
+        var selectedleafletcontrol = $('input[class=leaflet-control-layers-selector]:checked').parent().text().toLowerCase();
 
-        if (self.visibleLayers.velocity) {
+        if (self.visibleLayers.velocity && selectedleafletcontrol.indexOf("velocity")>=0) {
             self.velocityView && self.velocityView.redraw(
                 function vv_call(data) {
                     self.tabsControl && self.tabsControl.updateInfo(
@@ -311,7 +348,35 @@ MapView = (function($, L, Models, Config) {
             );
         }
 
-        if (self.visibleLayers.salinity) {
+        if (self.visibleLayers.wind && selectedleafletcontrol.indexOf("wind")>=0) {
+            self.windView && self.windView.redraw(
+                function wv_call(data) {
+                    self.tabsControl && self.tabsControl.updateInfo(
+                        {frame: self.currentFrame, date: data.date});
+                        callback && callback(data);
+                }
+            );
+        }
+
+        if (self.visibleLayers.buoys && selectedleafletcontrol.indexOf("buoys")>=0) {
+            self.buoysView && self.buoysView.redraw(
+                function wv_call(data) {
+                    self.tabsControl && self.tabsControl.updateInfo(
+                        {frame: self.currentFrame, date: data.date});
+                        callback && callback(data);
+                }
+            );
+        }
+        else{
+            if( Config.buoysMarkers.length != 0){
+                for(var i=0;i<Config.buoysMarkers.length;i++){
+                    self.map.removeLayer(Config.buoysMarkers[i]);
+                }
+            Config.buoysMarkers = [];
+        }
+        }
+
+        if (self.visibleLayers.salinity && selectedleafletcontrol.indexOf("salinity")>=0) {
             self.saltView && self.saltView.redraw(
                 function salt_call(data) {
                     self.tabsControl && self.tabsControl.updateInfo(
@@ -320,9 +385,58 @@ MapView = (function($, L, Models, Config) {
                         callback && callback(data);
                 }
             );
+            $('#salinity_legend').show();
+        }
+        else {
+            $('#salinity_legend').hide();
+        }
+
+        if (self.visibleLayers.temperature && selectedleafletcontrol.indexOf("temperature")>=0) {
+            self.temperatureView && self.temperatureView.redraw(
+                function temperature_call(data) {
+                    self.tabsControl && self.tabsControl.updateInfo({
+                        frame: self.currentFrame, 
+                        date: data.date, 
+                        numTemperatureLevels: self.temperatureView.numTemperatureLevels
+                    });
+                    callback && callback(data);
+                }
+            );
+            $('#temperature_legend').show();
+        }
+        else {
+            $('#temperature_legend').hide();
+        }
+
+        if (self.visibleLayers.radar && selectedleafletcontrol.indexOf("radar")>=0) {
+            self.radarView && self.radarView.redraw(
+                function radar_call(data){
+                    self.tabsControl && self.tabsControl.updateInfo({frame: self.currentFrame, date: data.date});
+                    callback && callback(data);
+                }
+            );
+        }
+
+        if (self.visibleLayers.speed && selectedleafletcontrol.indexOf("speed")>=0) {
+            self.speedView && self.speedView.redraw(
+                function speed_call(data) {
+                    self.tabsControl && self.tabsControl.updateInfo(
+                        {frame: self.currentFrame, date: data.date});
+                        callback && callback(data);
+                }
+            );
+            $('#speed_legend').show();
+        }
+        else {
+            $('#speed_legend').hide();
+        }
+
+        if (self.visibleLayers.none && selectedleafletcontrol.indexOf("none")>=0) {
+            self.minZoom = Config.minZoom;
+            self.maxZoom = Config.maxZoom;
+            self.noneView && self.noneView.redraw();
         }
     };
-
 
     return {
         mapView: function mapView(config) { return new MapView(config); }

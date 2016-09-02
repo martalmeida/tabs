@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Vector example</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+      <link rel="stylesheet" href="js/external/jquery/jquery-ui.min.css" type="text/css">
+      <link rel="stylesheet" href="js/external/jquery/jquery.datetimepicker.css" />
+      <link rel="stylesheet" href="js/external/leaflet/leaflet.mma.css" type="text/css" />
+      <link rel="stylesheet" href="js/external/leaflet-plugins/Control.FullScreen.css" type="text/css" />
+      <link rel="stylesheet" href="css/leaflet-sidebar.min.css" />
+      <link rel="stylesheet" href="css/style.css" type="text/css" media="all" />
+      <script src="js/external/jquery/jquery-1.12.1.min.js"></script>
+      <script src="js/external/jquery/jquery-ui.min.js"></script>
+      <script src="js/external/jquery/jquery.datetimepicker.full.min.js"></script>
+      <script src="js/external/leaflet/leaflet.js"></script>
+      <script src="js/external/leaflet-plugins/Control.FullScreen.js"></script>
+      <script src="js/external/leaflet-plugins/leaflet-sidebar.js"></script>
+      <script src="js/minified/jquery.query-object.min.js"></script>        
+   </head>
+   <body>
+      <div id="sidebar" class="sidebar collapsed">
+         <div class="sidebar-tabs">
+            <ul role="tablist">
+               <li><a href="#calendar" role="tab"><i class="fa fa-calendar fa-lg"></i></a></li>
+            </ul>
+         </div>
+         <div class="sidebar-content">
+            <div class="sidebar-pane" id="calendar">
+               <h1 class="sidebar-header">Calendar<span class="sidebar-close"><i class="fa fa-caret-left"></i></span></h1>
+               <p></p>
+               <div style="float:left; margin-right: 10px;">
+                  <label for="start_time">Start time (local time)</label><br/><input id="dtp_start" name="start_time" type="text" >
+               </div>
+               <div style="float:left; margin-right: 10px;">
+                  <label for="end_time">End time (local time)</label><br/><input id="dtp_end" name="end_time" type="text" >                
+               </div>
+               <div style="float:left; padding-top: 100px;">
+                  <button type="button" id="btn_timerange" class="btn" >Apply new time availables range</button><br /><br />
+                  <button type="button" id="btn_limitrange" class="btn" >Apply new time limits range</button>
+               </div>
+               <div style="clear: both;"></div>
+            </div>
+         </div>
+      </div>
+      <div id="map"></div>
+      <!-- vertex shader -->
+      <script id="vshader" type="x-shader/x-vertex">
+         precision mediump float;
+         uniform mat4 u_matrix;
+         attribute vec4 a_vertex;
+         attribute float a_color;
+         varying float v_color;
+         void main() {
+             // multiply each vertex by a matrix.
+             gl_Position = u_matrix * a_vertex;
+             v_color = a_color;
+         }
+      </script>
+      <!-- fragment shader -->
+      <script id="fshader" type="x-shader/x-fragment">
+         precision mediump float;
+         
+         
+         // The color palette
+         uniform sampler2D u_palette;
+         uniform float u_paletteFactor;
+         
+         // This pixels color (from vertex shader)
+         varying float v_color;
+         
+         float idx;
+         void main() {
+             idx = v_color * u_paletteFactor; // + u_paletteFactor * 0.5;
+             gl_FragColor = texture2D(u_palette, vec2(idx, 0));
+         }
+      </script>
+      <script src="js/polyfill.js"></script>
+      <script src="js/SliderControl.js"></script>
+      <script src='js/Config.js'></script>
+      <script src='js/Trig.js'></script>
+      <script src='js/API.js'></script>
+      <script src='js/Models.js'></script>
+	  <script src='js/Views.js'></script>
+      <script src='js/MapView.js'></script>
+      <script src='js/TABSControl.js'></script>
+      <script src="js/leaflet_tileloader_mixin.js"></script>
+      <script src="js/L.WebGLOverlay.js"></script>
+      <script src='js/tabs.js'></script>
+      <script src='js/newappends.js'></script>
+      <script>
+         $('#dtp_start').datetimepicker({
+           inline: true,
+           value: new Date('2015-09-01'),
+           format: "c"
+         });
+         $('#dtp_end').datetimepicker({
+           inline: true,
+           value: new Date('2015-09-03'),
+           format: "c"
+         });
+         
+         $("#btn_timerange").click(function(){
+           var startTime = new Date($('#dtp_start').val());
+           var endTime = new Date($('#dtp_end').val());
+           var newAvailableTimes = L.TimeDimension.Util.explodeTimeRange(startTime, endTime, 'PT1H');
+           map.timeDimension.setAvailableTimes(newAvailableTimes, 'replace');
+           map.timeDimension.setCurrentTime(startTime);
+         });
+         
+         $("#btn_limitrange").click(function(){
+           var startTime = new Date($('#dtp_start').val());
+           var endTime = new Date($('#dtp_end').val());    
+           map.timeDimension.setLowerLimit(startTime);
+           map.timeDimension.setUpperLimit(endTime);
+           map.timeDimension.setCurrentTime(startTime);
+         });
+      </script>
+	  
+   </body>
+</html>

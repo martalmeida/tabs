@@ -63,16 +63,41 @@ L.WebGLVectorLayer = L.Class.extend({
     // We will make a 1xN texture image, where each pixel is a different color
     // On the GPU we index into this palette get the color of a line
 
-    // Set the color palette
+    // // Set the color palette
+    // this.palette = new Uint8Array([
+      // 0   , 0   , 0   , 255 , // 0 Black
+      // 255 , 0   , 0   , 255 , // 1 Red
+      // 0   , 255 , 0   , 255 , // 2 Green
+      // 0   , 0   , 255 , 255 , // 3 Blue
+      // 255 , 0   , 255 , 255 , // 4 Purple
+      // 255 , 255 , 0   , 255 , // 5 Orange
+      // 0   , 255 , 255 , 255 , // 6 Teal
+      // 255 , 255 , 255 , 255   // 7 White
+    // ]);
     this.palette = new Uint8Array([
-      0   , 0   , 0   , 255 , // 0 Black
-      255 , 0   , 0   , 255 , // 1 Red
-      0   , 255 , 0   , 255 , // 2 Green
-      0   , 0   , 255 , 255 , // 3 Blue
-      255 , 0   , 255 , 255 , // 4 Purple
-      255 , 255 , 0   , 255 , // 5 Orange
-      0   , 255 , 255 , 255 , // 6 Teal
-      255 , 255 , 255 , 255   // 7 White
+      255 , 255, 255, 255 , // 0 White
+      114 , 247   , 173 , 255 , // 1 
+      113 , 247 , 135 , 255 , // 2 
+      112 , 245   , 95 , 255 , // 3 
+      112 , 245   , 56 , 255 , // 4 
+      116 , 246 , 47   , 255 , // 5 
+      134   , 246 , 49 , 255 , // 6 
+      159 , 246 , 51 , 255,   // 7 
+      187 , 248 , 53 , 255,   // 8 
+      217 , 246 , 56 , 255,   // 9 
+      246 , 250 , 59 , 255,   // 10 Yellow
+      250 , 225 , 56 , 255,   // 11 
+      245 , 190 , 49 , 255,   // 12 
+      241 , 155 , 44 , 255,   // 13 
+      238 , 118 , 39 , 255,   // 14 
+      236 , 82 , 35 , 255,   // 15 
+      235 , 59 , 34 , 255,    // 16 
+      139 , 0 , 0 , 255,    // 17 DarkRed
+      128 , 0 , 0 , 255,    // 18 Maroon
+      78 , 0 , 0 , 255,    // 19 Maroon
+      35 , 0 , 0 , 255,    // 20 Maroon
+      0 , 0 , 0 , 255,    // 21 Black
+      0, 34, 102, 255     // 22 Dark Blue
     ]);
     this.paletteSize = this.palette.length / 4;
 
@@ -198,6 +223,11 @@ L.WebGLVectorLayer = L.Class.extend({
     var pixel = {x: pixelX, y: pixelY};
     return pixel;
   },
+  
+  distanceBetwPixelToColor: function(pixel1,pixel2) {
+    var distance = Math.sqrt(Math.pow(pixel2.x-pixel1.x,2)+Math.pow(pixel2.y-pixel1.y,2));
+    return distance;
+  },
 
   translateMatrix: function(matrix, tx, ty) {
     // translation is in last column of matrix
@@ -225,7 +255,7 @@ L.WebGLVectorLayer = L.Class.extend({
       return Math.floor(Math.random() * range);
   },
 
-  setLines: function(lines, colors) {
+  setLines: function(lines, colors, source) {
     // Expects an array of points and an optional array or object of colors such
     // that the line from lines[i] has color colors[i].
     // one line is [[x1, y1], [x2, y2]]
@@ -242,20 +272,191 @@ L.WebGLVectorLayer = L.Class.extend({
     var cidx = 0;
 
     colors = colors || {};
+    
+    //Draw all arrows with same color
+    var constM = 25;
+    var selectedZoom = mapView.map.getZoom();
+    var minZoom = mapView.minZoom;
+    var scaleColor = Math.pow(2, selectedZoom - minZoom);
 
-    for (var i = 0; i < lines.length; i++) {
-      var color = colors[i] | 0;
+    for (var i = 0; i < lines.length; i+=3) {
+        
+      // Define first line header arrow
       // First point in the line
-      var pixel = this.latLongToPixelXY(lines[i][0][0], lines[i][0][1]);
-      this.vertArray[vidx++] = pixel.x;
-      this.vertArray[vidx++] = pixel.y;
-      this.colorArray[cidx++] = color;
-
+      var pixel_h11 = this.latLongToPixelXY(lines[i][0][0], lines[i][0][1]);
       // Second point in the line
-      pixel = this.latLongToPixelXY(lines[i][1][0], lines[i][1][1]);
-      this.vertArray[vidx++] = pixel.x;
-      this.vertArray[vidx++] = pixel.y;
+      var pixel_h12 = this.latLongToPixelXY(lines[i][1][0], lines[i][1][1]);
+
+      // Define second line header arrow
+      var pixel_h21 = this.latLongToPixelXY(lines[i+1][0][0], lines[i+1][0][1]);
+      var pixel_h22 = this.latLongToPixelXY(lines[i+1][1][0], lines[i+1][1][1]);
+      
+      // Define body line
+      var pixel1 = this.latLongToPixelXY(lines[i+2][0][0], lines[i+2][0][1]);
+      var pixel2 = this.latLongToPixelXY(lines[i+2][1][0], lines[i+2][1][1]);
+      
+      //var color = colors[i] | 0;
+      var color = source=='wind' ? 21 : source=='radar' ? 5 : Math.floor(constM*scaleColor*this.distanceBetwPixelToColor(pixel1,pixel2));
+      //console.log(color);
+      
+      //construct first line header arrow
+      this.vertArray[vidx++] = pixel_h11.x;
+      this.vertArray[vidx++] = pixel_h11.y;
       this.colorArray[cidx++] = color;
+      this.vertArray[vidx++] = pixel_h12.x;
+      this.vertArray[vidx++] = pixel_h12.y;
+      this.colorArray[cidx++] = color;
+      
+      //construct second line header arrow
+      this.vertArray[vidx++] = pixel_h21.x;
+      this.vertArray[vidx++] = pixel_h21.y;
+      this.colorArray[cidx++] = color;
+      this.vertArray[vidx++] = pixel_h22.x;
+      this.vertArray[vidx++] = pixel_h22.y;
+      this.colorArray[cidx++] = color;
+      
+      //construct first line header arrow
+      this.vertArray[vidx++] = pixel1.x;
+      this.vertArray[vidx++] = pixel1.y;
+      this.colorArray[cidx++] = color;
+      this.vertArray[vidx++] = pixel2.x;
+      this.vertArray[vidx++] = pixel2.y;
+      this.colorArray[cidx++] = color;
+    }
+
+    var gl = this._ctx;
+
+    // Copy vertex data to GPU
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.vertArray, gl.STATIC_DRAW);
+
+    // Copy color data to GPU
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, this.colorArray, gl.STATIC_DRAW);
+    this.redraw();
+  },
+  
+  setLines2D: function(lines, colors, source) {
+
+    this.allocateBuffers(lines.length*8/3);
+    var vidx = 0;
+    var cidx = 0;
+
+    colors = colors || {};
+    
+    //Draw all arrows with same color
+    var constM = 25;
+    var selectedZoom = mapView.map.getZoom();
+    var minZoom = mapView.minZoom;
+    var scaleColor = Math.pow(2, selectedZoom - minZoom);
+
+    var param1 = source=='buoys' ? 3/4 : 2/3;
+    var param2 = source=='buoys' ? 0.02 : 1/3;
+    var param3 = source=='buoys' ? 0 : 1/3;
+
+    var theta = source=='buoys' ? Math.PI/6 : Math.PI/4;
+    
+    for (var i = 0; i < lines.length; i+=3) {
+    
+      var p0 = this.latLongToPixelXY(lines[i+2][1][0], lines[i+2][1][1]);
+      var p4 = this.latLongToPixelXY(lines[i+2][0][0], lines[i+2][0][1]);
+
+      var L = norm2(p0,p4);
+      if (L>0){
+
+          var V = {x:p4.x-p0.x, y:p4.y-p0.y};
+          var r = prodScalar(V,1/L);
+          var pi = somVect(p0,prodScalar(r,param1 * L));
+          var aux = V.y==0 ? Math.PI/2 : Math.atan(-V.x/V.y);
+          
+          var ri = {x:Math.cos(aux), y:Math.sin(aux)};
+          var PiP3 = norm2(p4,pi)*Math.tan(theta);
+
+          var p3 = somVect(pi,prodScalar(ri,PiP3));
+          var p5 = somVect(pi,prodScalar(ri,-PiP3));
+          var p1 = somVect(p0,prodScalar(ri,PiP3*param2));
+          
+          var b1 = param3 * norm(somVect(p4,prodScalar(pi,-1)));
+          var b2 = b1 / PiP3 * (PiP3 - norm(somVect(p1,prodScalar(p0,-1))));
+          
+          var p7 = somVect(p0,prodScalar(ri,-PiP3*param2));
+          var p2 = somVect(p1,prodScalar(r,param1 * L + b2));
+          var p6 = somVect(p7,prodScalar(r,param1 * L + b2));
+      }      
+        
+      // Define first line header arrow
+      // First point in the line
+      var pixel_h11 = this.latLongToPixelXY(lines[i][0][0], lines[i][0][1]);
+      // Second point in the line
+      var pixel_h12 = this.latLongToPixelXY(lines[i][1][0], lines[i][1][1]);
+
+      // Define second line header arrow
+      var pixel_h21 = this.latLongToPixelXY(lines[i+1][0][0], lines[i+1][0][1]);
+      var pixel_h22 = this.latLongToPixelXY(lines[i+1][1][0], lines[i+1][1][1]);
+      
+      // Define body line
+      var pixel1 = this.latLongToPixelXY(lines[i+2][0][0], lines[i+2][0][1]);
+      var pixel2 = this.latLongToPixelXY(lines[i+2][1][0], lines[i+2][1][1]);
+      
+      
+      //var color = colors[i] | 0;
+      var color = source=='wind' ? 21 : source=='buoys' ? 16 : Math.floor(constM*scaleColor*this.distanceBetwPixelToColor(pixel1,pixel2));
+      
+      this.vertArray[vidx++] = p0.x;
+      this.vertArray[vidx++] = p0.y;
+      this.colorArray[cidx++] = 22;      
+      this.vertArray[vidx++] = p1.x;
+      this.vertArray[vidx++] = p1.y;
+      this.colorArray[cidx++] = 22;
+      
+      this.vertArray[vidx++] = p1.x;
+      this.vertArray[vidx++] = p1.y;
+      this.colorArray[cidx++] = 22;
+      this.vertArray[vidx++] = p2.x;
+      this.vertArray[vidx++] = p2.y;
+      this.colorArray[cidx++] = 22;
+      
+      this.vertArray[vidx++] = p2.x;
+      this.vertArray[vidx++] = p2.y;
+      this.colorArray[cidx++] = 22;
+      this.vertArray[vidx++] = p3.x;
+      this.vertArray[vidx++] = p3.y;
+      this.colorArray[cidx++] = 22;
+      
+      this.vertArray[vidx++] = p3.x;
+      this.vertArray[vidx++] = p3.y;
+      this.colorArray[cidx++] = 22;
+      this.vertArray[vidx++] = p4.x;
+      this.vertArray[vidx++] = p4.y;
+      this.colorArray[cidx++] = 22;
+
+      this.vertArray[vidx++] = p4.x;
+      this.vertArray[vidx++] = p4.y;
+      this.colorArray[cidx++] = 22;
+      this.vertArray[vidx++] = p5.x;
+      this.vertArray[vidx++] = p5.y;
+      this.colorArray[cidx++] = 22;
+
+      this.vertArray[vidx++] = p5.x;
+      this.vertArray[vidx++] = p5.y;
+      this.colorArray[cidx++] = 22;
+      this.vertArray[vidx++] = p6.x;
+      this.vertArray[vidx++] = p6.y;
+      this.colorArray[cidx++] = 22;
+
+      this.vertArray[vidx++] = p6.x;
+      this.vertArray[vidx++] = p6.y;
+      this.colorArray[cidx++] = 22;
+      this.vertArray[vidx++] = p7.x;
+      this.vertArray[vidx++] = p7.y;
+      this.colorArray[cidx++] = 22;
+
+      this.vertArray[vidx++] = p7.x;
+      this.vertArray[vidx++] = p7.y;
+      this.colorArray[cidx++] = 22;
+      this.vertArray[vidx++] = p0.x;
+      this.vertArray[vidx++] = p0.y;
+      this.colorArray[cidx++] = 22;      
     }
 
     var gl = this._ctx;
@@ -378,14 +579,16 @@ L.WebGLVectorLayer = L.Class.extend({
 
   // use direct: true if you are inside an animation frame call
   redraw: function(direct) {
-    var domPosition = L.DomUtil.getPosition(this._map.getPanes().mapPane);
-    if (domPosition) {
-      L.DomUtil.setPosition(this._canvas, { x: -domPosition.x, y: -domPosition.y });
-    }
-    if (direct) {
-      this.render();
-    } else {
-      this._render();
+    if(this._map !== undefined){
+        var domPosition = L.DomUtil.getPosition(this._map.getPanes().mapPane);
+        if (domPosition) {
+          L.DomUtil.setPosition(this._canvas, { x: -domPosition.x, y: -domPosition.y });
+        }
+        if (direct) {
+          this.render();
+        } else {
+          this._render();
+        }
     }
   },
 

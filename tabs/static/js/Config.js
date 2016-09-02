@@ -4,7 +4,17 @@ var Config = {
     // API
     velocityGridLocationsURL: '/data/thredds/velocity/grid',
     velocityFrameURL: '/data/thredds/velocity/step/',
-    saltFrameURL: '/data/thredds/salt/step/',
+    windGridLocationsURL: '/data/thredds/wind/grid',
+    windFrameURL: '/data/thredds/wind/step/',
+    saltFrameURL: '/data/thredds/model/step/',
+    temperatureFrameURL: '/data/thredds/model/step/',
+    speedFrameURL: '/data/thredds/model/step/',
+    radarGridLocationsURL : '/data/thredds/radar/grid',
+    radarFrameURL: '/data/thredds/radar/step/',
+    noneGridLocationsURL : '',
+    noneFrameURL: '',
+    buoysGridLocationsURL : '/data/thredds/buoys/grid',
+    buoysFrameURL: '/data/thredds/buoys/step/',
     domainURL: '/data/prefetched/domain',
     timestampURL: '/data/thredds/timestamps',
     tileLayerURL: 'https://{s}.tiles.mapbox.com/v4/tabs-enthought.j3nibphe/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoidGFicy1lbnRob3VnaHQiLCJhIjoiX0RNTzlmbyJ9.gio9AiDol4CT13yJ2GyRHw',
@@ -18,23 +28,32 @@ var Config = {
 
     // Contour style
     contourOptions: {
-        numSaltLevels: 10,
+        numSaltLevels: 12,
         logspaceSaltLevels: false,
+        numTemperatureLevels: 12,
+        logspaceTemperatureLevels: false,
+        numSpeedLevels: 12,
+        logspaceSpeedLevels: false,
 
         // Parameters defined here override the data
         // Contour outline color (Undefined matches the fill color)
         // color: 'black',
         // Contour outline weight
-        weight: 0.5,
+        weight: 1,
         // Contour outline opacity
         opacity: 1,
         // Contour fill opacity
-        fillOpacity: 0.5
+        fillOpacity: 1
     },
 
     // Data Sources
     enableVelocity: true,
-    enableSalinity: false,
+    enableSalinity: true,
+    enableTemperature: true,
+    enableSpeed: true,
+    enableWind: true,
+    enableBuoys: true,
+    enableRadar: true,
 
 
     // Map view config
@@ -70,10 +89,18 @@ var Config = {
 
     // Which data is shown by default?
     visibleLayers: {
-        velocity: true,
-        salinity: false
+        temperature: true,
+        salinity: true,
+        speed: true,
+        none: true,
+        radar: false,
+        velocity: false,
+        buoys: false,
+		wind: false
     },
 
     monthStrings: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    buoysMarkers: [],
+	opacityLegend: 100
 };

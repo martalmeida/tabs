@@ -3,7 +3,8 @@ from threading import Timer, RLock
 
 import numpy as np
 
-from tabs.thredds_frame_source import (  # noqa
+#from tabs.thredds_frame_source import (  # noqa
+from thredds_frame_source import (  # noqa
     THREDDSFrameSource, FORECAST_DATA_URI, FORECAST_CACHE_DATA_URI,
     HINDCAST_DATA_URI, HINDCAST_CACHE_DATA_URI
 )

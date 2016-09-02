@@ -7,6 +7,7 @@ L.Control.SliderControl = L.Control.extend({
         markers: null,
         range: false,
         follow: false,
+		slider_size: 160
     },
 
     value: function(value) {
@@ -43,9 +44,10 @@ L.Control.SliderControl = L.Control.extend({
 
         // Create a control sliderContainer with a jquery ui slider
         var sliderContainer = L.DomUtil.create('div', 'slider', this._container);
-        $(sliderContainer).append('<div id="leaflet-slider" style="width:200px"><div class="ui-slider-handle"></div><div id="slider-timestamp" style="width:200px; margin-top:10px;background-color:#FFFFFF"></div></div>');
+        $(sliderContainer).append('<a class="leaflet-slider-minus"><i class="fa fa-lg fa-minus-circle"></i></a><div id="leaflet-slider" style="width:'+this.options.slider_size+'px"><div class="ui-slider-handle"></div><div id="slider-timestamp" style="width:'+this.options.slider_size+'px; margin-top:10px;background-color:#FFFFFF"></div></div><a class="leaflet-slider-plus"><i class="fa fa-lg fa-plus-circle"></i></a>');
         //Prevent map panning/zooming while using the slider
-        $(sliderContainer).mousedown(function () {
+
+		$(sliderContainer).mousedown(function () {
             map.dragging.disable();
         });
         $(document).mouseup(function () {
