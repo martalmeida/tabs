@@ -76,21 +76,21 @@ class THREDDSFrameSource(object):
         if self.isForec: self.epochSeconds = self.epochSeconds[-100:][::-1]
         self.dates = netCDF.num2date(self.epochSeconds, 'seconds since 1970-01-01')
 
-        print 'loading velocity grid ...'
+        print('loading velocity grid ...')
         self._configure_velocity_grid()
-        print 'loading salt grid ...'
+        print('loading salt grid ...')
         self._configure_salt_grid()
-        print 'loading bathy contours...'
+        print('loading bathy contours...')
         self.bathy=self.bathy_contours()
-        print 'loading radar grid ...'
+        print('loading radar grid ...')
         #self._configure_radar_grid()
         self._init_radar()
-        print 'loading wind grid ...'
+        print('loading wind grid ...')
         self. _configure_wind_grid()
-        print 'loading buoys grid ...'
+        print('loading buoys grid ...')
         self. _configure_buoys_grid()
 
-        print 'all grids done !!'
+        print('all grids done !!')
 
     def _configure_velocity_grid(self):
 
@@ -130,7 +130,7 @@ class THREDDSFrameSource(object):
 
         # # We don't need to decimate or shuffle this because we're going to be
         # # shipping out derived contour lines
-        # self.salt_idx, self.salt_idy = mask.nonzero()	
+        # self.salt_idx, self.salt_idy = mask.nonzero()
 
 
     def _init_radar(self,):
@@ -162,7 +162,7 @@ class THREDDSFrameSource(object):
         lat=self.nc_radar.variables['lat'][:]
         try:
           mask=self.nc_radar.variables['mask'][:]
-        except: 
+        except:
           mask=np.ones(lon.shape,'bool')
 
 
@@ -190,10 +190,10 @@ class THREDDSFrameSource(object):
         names='boia 1','boia 2','boia 3'
         self.buoys_grid = dict(lon=x,lat=y,name=names)
         self.buoys_inds=np.arange(x.size)
-        
+
     def velocity_frame(self, frame_number):
         if self.isForec: frame_number=-1-frame_number
-        print 'loading vel  frame number %d, isforec=%d'%(frame_number,self.isForec)
+        print('loading vel  frame number %d, isforec=%d'%(frame_number,self.isForec))
         u = self.nc.variables['u'][frame_number, -1, :, :]
         v = self.nc.variables['v'][frame_number, -1, :, :]
         u, v = shrink(u, v)
@@ -209,7 +209,7 @@ class THREDDSFrameSource(object):
                   'u': u[self.velocity_idx, self.velocity_idy],
                   'v': v[self.velocity_idx, self.velocity_idy]}
 
-        print 'loading velocity_frame done'
+        print('loading velocity_frame done')
 
         return vector
 
@@ -223,7 +223,7 @@ class THREDDSFrameSource(object):
 
         u,v,msg=self.radar.load_uv_at_date(date)
         if msg:
-          print msg
+          print(msg)
           return {'date': date.isoformat(),'u': [],'v': []}
 
         # update grid cos of new mask:
@@ -259,14 +259,14 @@ class THREDDSFrameSource(object):
         i=np.where(d==d.min())[0][0]
 
         # let the max diff be radar dt
-        if time[i]>date: 
+        if time[i]>date:
             dt=time[i]-date
-        else: 
+        else:
             dt=date-time[i]
-        if dt>DtMax: 
-            print 'loading radar_frame done but dt>DtMax !'
-            print '  current time: %s'%date.isoformat()
-            print '  radar range: %s to %s'%(time[0].isoformat(),time[-1].isoformat())
+        if dt>DtMax:
+            print('loading radar_frame done but dt>DtMax !')
+            print('  current time: %s'%date.isoformat())
+            print('  radar range: %s to %s'%(time[0].isoformat(),time[-1].isoformat()))
             #return {'date': time[i].isoformat(),'u': [],'v': []}
 
         u=self.nc_radar.variables['u'][i]
@@ -277,15 +277,15 @@ class THREDDSFrameSource(object):
                   'v':    (v.flat[self.radar_i0]*100).astype('i'),
                   'inds': self.radar_inds}
 
-        print self.radar_grid['lon'].shape
-        print self.radar_grid['lat'].shape
-        print vector['u'].shape
-        print vector['v'].shape
-        print vector['u'].max()
-        print vector['u'].min()
-        print vector['v'].max()
-        print vector['v'].min()
-        print 'loading radar_frame done'
+        print(self.radar_grid['lon'].shape)
+        print(self.radar_grid['lat'].shape)
+        print(vector['u'].shape)
+        print(vector['v'].shape)
+        print(vector['u'].max())
+        print(vector['u'].min())
+        print(vector['v'].max())
+        print(vector['v'].min())
+        print('loading radar_frame done')
 
         return vector
         '''
@@ -311,9 +311,9 @@ class THREDDSFrameSource(object):
             i0=np.where(time<=date)[0][-1]
             i1=np.where(time>date)[0][0]
           except:
-            print 'loading wind error:'
-            print '  - model time: %s'%date.isoformat()
-            print '  - wind time range: %s to %s'%(time[0],time[-1])
+            print('loading wind error:')
+            print('  - model time: %s'%date.isoformat())
+            print('  - wind time range: %s to %s'%(time[0],time[-1]))
             return dict(date=date,u=np.array(()),v=np.array(()),inds=np.array(()))
         else:
              i0=0
@@ -360,7 +360,7 @@ class THREDDSFrameSource(object):
 
         if self.isForec: frame_number=-1-frame_number
 
-        print 'loading salt frame number %d, isforec=%d'%(frame_number,self.isForec)
+        print( 'loading salt frame number %d, isforec=%d'%(frame_number,self.isForec))
         if varname=='speed':
           u=self.nc.variables['u'][frame_number, -1, :, :]
           v=self.nc.variables['v'][frame_number, -1, :, :]
@@ -410,7 +410,7 @@ class THREDDSFrameSource(object):
         else:
             cmap = plt.cm.get_cmap(cmap)
 
-        print levels
+        print( levels)
         contours = plt.contourf(self.salt_lon, self.salt_lat, salt, levels,
                                 cmap=cmap, extend='both')
 
@@ -420,11 +420,11 @@ class THREDDSFrameSource(object):
         frame = {'date': self.dates[frame_number].isoformat(),
                  'contours': geojson}
 
-        print 'loading salt done'
+        print( 'loading salt done')
         return frame
 
     def bathy_contours(self):
-      print 'loading bathy...'
+      print( 'loading bathy...')
       plt.figure()
       contours = plt.contourf(self.salt_lon, self.salt_lat, self.ncg['h'][:,:], [50,100,200,500,1000],colors='k')
       geojson = self.contours_to_geoJSON(contours)
@@ -433,7 +433,7 @@ class THREDDSFrameSource(object):
       frame = {'date': None,
                'contours': geojson}
 
-      print 'loading bathy done'
+      print( 'loading bathy done')
       return frame
 
     def contours_to_geoJSON(self, contours):
@@ -443,7 +443,7 @@ class THREDDSFrameSource(object):
             if np.isneginf(cvalue): cvalue=0
             if np.isposinf(cvalue): cvalue=100
             #if np.isneginf(cvalue) or np.isposinf(cvalue): continue
-#            print '---->',cvalue
+#            print( '---->',cvalue)
             for path in collection.get_paths():
                 path.should_simplify = False
                 for coords in path.to_polygons():
@@ -460,7 +460,7 @@ class THREDDSFrameSource(object):
             opacity = int(rgba[-1]) / 255.0
             rgb = (rgba[0] << 16) + (rgba[1] << 8) + rgba[2]
             hex_color = "#{:06x}".format(rgb)
-            print '-->--> ',cvalue, hex_color
+            print( '-->--> ',cvalue, hex_color)
             feat = {'type': 'Feature',
                     'properties': {'fillColor': hex_color,
                                    'fillOpacity': opacity,
