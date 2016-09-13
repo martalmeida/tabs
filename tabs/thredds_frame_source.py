@@ -218,7 +218,7 @@ class THREDDSFrameSource(object):
         date=self.dates[tind]
 
         import datetime
-        date=datetime.datetime(2016,8,25)
+        date=datetime.datetime(2016,9,10)
         #date=datetime.datetime(2014,4,19)
 
         u,v,msg=self.radar.load_uv_at_date(date)
@@ -400,19 +400,19 @@ class THREDDSFrameSource(object):
         plt.figure()
         if cmap is None:
           try:
-            from cmocean.cm import salinity, temperature
+            from cmocean.cm import salinity, temperature, speed
             if varname=='salt': cmap=salinity
             elif varname=='temp': cmap=temperature
-            elif varname=='speed': cmap=plt.cm.PuRd
+            elif varname=='speed': cmap=speed
+            #elif varname=='speed': cmap=plt.cm.PuRd
           except ImportError:
             cmap = plt.cm.YlGnBu
 
         else:
             cmap = plt.cm.get_cmap(cmap)
 
-        print( levels)
-        contours = plt.contourf(self.salt_lon, self.salt_lat, salt, levels,
-                                cmap=cmap, extend='both')
+        print levels
+        contours = plt.contourf(self.salt_lon, self.salt_lat, salt, levels, cmap=cmap, extend='both')
 
         geojson = self.contours_to_geoJSON(contours)
         plt.close()
