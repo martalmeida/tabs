@@ -399,14 +399,16 @@ class THREDDSFrameSource(object):
 
         plt.figure()
         if cmap is None:
-          try:
-            from cmocean.cm import salinity, temperature, speed
+          #try:
+          if 1:
+            #from cmocean.cm import salinity, temperature, speed
+            from cmocean.cm import haline as salinity, thermal as temperature, speed
             if varname=='salt': cmap=salinity
             elif varname=='temp': cmap=temperature
             elif varname=='speed': cmap=speed
             #elif varname=='speed': cmap=plt.cm.PuRd
-          except ImportError:
-            cmap = plt.cm.YlGnBu
+          #except ImportError:
+          #  cmap = plt.cm.YlGnBu
 
         else:
             cmap = plt.cm.get_cmap(cmap)
