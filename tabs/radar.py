@@ -125,7 +125,7 @@ class TXLARadar:
 
   def load_uv_at_tind(self,tind):
     tind=self.time_inds[tind] # cos of ntimes_max
-    print 'tind=',tind
+    print('tind=',tind)
     i0,i1,j0,j1=self.ijlims
     u=self.nc.variables['u'][tind,j0:j1:self.step,i0:i1:self.step]
     v=self.nc.variables['v'][tind,j0:j1:self.step,i0:i1:self.step]

@@ -2,7 +2,8 @@ import argparse
 import sys
 import numpy as np
 from flask import Flask, jsonify, make_response, redirect, request, url_for
-from flask.ext.compress import Compress
+from flask_compress import Compress
+# from flask.ext.compress import Compress  # this is deprecated 
 
 #from tabs.thredds_connection import ThreddsConnection, HINDCAST_CACHE_DATA_URI
 from thredds_connection import ThreddsConnection, HINDCAST_CACHE_DATA_URI
@@ -166,7 +167,7 @@ def thredds_wind_frame(time_step):
     datasource = request.args.get('datasource', 'hindcast')
     app.logger.info(datasource)
     fs = get_fs(datasource)
-	
+
 
     try:
         rs = fs.wind_frame(time_step)
@@ -258,8 +259,8 @@ def thredds_model_frame(time_step):
     salt = fs.salt_frame(
         time_step, num_levels=num_levels, logspace=logspace, varname=varname)
     return jsonify(salt)
-	
-	
+
+
 def start(debug=True, host='127.0.0.1', port=5000):
     app.run(debug=debug, host=host, port=port)
 
